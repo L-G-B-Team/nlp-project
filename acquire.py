@@ -26,20 +26,21 @@ from env import github_token, github_username
 
 REPOS_CSV = 'repos.csv'
 READMES_CSV = 'readmes.csv'
+
 def get_repo_urls()->pd.Series:
     if os.path.isfile(REPOS_CSV):
-        return pd.read_csv(REPOS_CSV)
+        return pd.read_csv(REPOS_CSV)['0']
     all_links = []
-    for p in range(1,51):
+    for p in range(1,151):
         response = requests.get(f'https://github.com/search?p={p}&q=stars%3A%3E0&s=stars&type=Repositories').content
-        bs = BeautifulSoup(response)
-        all_links += ['https://github.com' + l['href'] for l in bs.find_all('a',class_='v-align-middle')]
+        bs = BeautifulSoup(response,'html.parser')
+        all_links += [l['href'] for l in bs.find_all('a',class_='v-align-middle')]
         time.sleep(5)
-    lonks = pd.Series(all_links)
+    lonks = pd.Series(all_links).drop_duplicates()
     lonks.to_csv(REPOS_CSV,index=False)
     
     return lonks
-REPOS = get_repo_urls()['0'].to_list()
+REPOS = get_repo_urls().to_list()
 
 headers = {"Authorization": f"token {github_token}", "User-Agent": github_username}
 
