@@ -13,36 +13,36 @@ stopwords = stpwrds.words('english')
 LANGUAGE_COUNT = 5
 
 EXTRA_WORDS = ['&#9;',
- 'example',
- 'api',
- 'data',
- 'return',
- 'support',
- 'new',
- 'image',
- 'install',
- 'version',
- 'img',
- 'build',
- 'object',
- 'open',
- 'user',
- '3',
- 'td',
- 'web',
- 'docker',
- 'opensource',
- 'server',
- 'option',
- 'type',
- 'tool',
- 'test',
- 'method',
- 'list',
- 'name',
- 'number',
- 'import',
- 'string']
+               'example',
+               'api',
+               'data',
+               'return',
+               'support',
+               'new',
+               'image',
+               'install',
+               'version',
+               'img',
+               'build',
+               'object',
+               'open',
+               'user',
+               '3',
+               'td',
+               'web',
+               'docker',
+               'opensource',
+               'server',
+               'option',
+               'type',
+               'tool',
+               'test',
+               'method',
+               'list',
+               'name',
+               'number',
+               'import',
+               'string']
 
 
 def basic_clean(string: str) -> str:
@@ -187,26 +187,25 @@ def series_generator(df):
     prep_df_for_nlp and creates 6 pd.Series based on 
     the programing language. The series creates are 
     lists of strings that are the words in the READMEs'''
-    
+
     # generates series for the top five languages
-    javascript_words_series = (' '.join(df[df.language == 'JavaScript']['readme_contents']))
-    python_words_series = (' '.join(df[df.language == 'Python']['readme_contents']))
-    typescript_words_series = (' '.join(df[df.language == 'TypeScript']['readme_contents']))
+    javascript_words_series = (
+        ' '.join(df[df.language == 'JavaScript']['readme_contents']))
+    python_words_series = (
+        ' '.join(df[df.language == 'Python']['readme_contents']))
+    typescript_words_series = (
+        ' '.join(df[df.language == 'TypeScript']['readme_contents']))
     go_words_series = (' '.join(df[df.language == 'Go']['readme_contents']))
-    java_words_series = (' '.join(df[df.language == 'Java']['readme_contents']))
+    java_words_series = (
+        ' '.join(df[df.language == 'Java']['readme_contents']))
 
     # generates series for the languages not listed and not in the top 5
-    language_not_listed_series = (' '.join(df[df.language == 'Not Listed']['readme_contents']))
+    language_not_listed_series = (
+        ' '.join(df[df.language == 'Not Listed']['readme_contents']))
     other_series = (' '.join(df[df.language == 'Other']['readme_contents']))
-    
+
     # a series of words for all readme contents
     all_words_series = (' '.join(df['readme_contents']))
-    
-    
+
     # returned in order of: javascript_series, python_series, type_series, go_series, java_series, unlisted, other, all_words_series
-    return javascript_words_series, python_words_series, typescript_words_series, go_words_series, java_words_series,language_not_listed_series,other_series, all_words_series 
-
-
-
-
-
+    return (javascript_words_series, python_words_series, typescript_words_series, go_words_series, java_words_series, language_not_listed_series, other_series, all_words_series)
