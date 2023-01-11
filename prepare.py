@@ -10,6 +10,8 @@ from nltk.corpus import stopwords as stpwrds
 
 stopwords = stpwrds.words('english')
 
+TOP_5_LANGUAGES = ['JavaScript', 'Python', 'TypeScript', 'Go', 'Java']
+
 
 def basic_clean(string: str) -> str:
     '''
@@ -109,7 +111,9 @@ def prep_df_for_nlp(df: pd.DataFrame, series_to_prep: str,
                     extra_words: List[str] = [],
                     exclude_words: List[str] = []) -> pd.DataFrame:
     '''
-    Cleans and prepares a `DataFrame` for NLP
+    Cleans and prepares a `DataFrame` for NLP,
+    adds cleaned, stemmed, and lemmatized columns
+    and collapses languages outside the top 5 to 'Other'
     ## Parameters
         df: `DataFrame` to be cleaned
 
@@ -120,12 +124,22 @@ def prep_df_for_nlp(df: pd.DataFrame, series_to_prep: str,
         exclude_words: list of strings of stop words to keep in strings
 
     ## Returns
-    Prepared `DataFrame`
+    Prepared `DataFrame` with additional columns containing cleaned data,
+    stemmmed, and lemmatized data
     '''
+    # Clean data
     df['clean'] = df[series_to_prep].apply(
         squeaky_clean, exclude_words=exclude_words, extra_words=extra_words)
+    # Stem cleaned data
     df['stem'] = df['clean'].apply(stem)
+    # lemmatizes clean data
     df['lemmatized'] = df['clean'].apply(lemmatize)
+    # change languages other than Top 5 languages to other
+    language_mask = ~df.language.isin(TOP_5_LANGUAGES)
+    df.loc[language_mask, 'language'] = 'Other'
+    # changes language to category
+    df.language = df.language.astype('cat')
+
     return df
 
 ############################################################ DIRECT CALLS FOR LANGUAGE SERIES
