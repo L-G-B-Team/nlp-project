@@ -25,6 +25,7 @@ from env import github_token, github_username
 # TODO: Write a function to pull in starred repos
 
 REPOS_CSV = 'repos.csv'
+READMES_CSV = 'readmes.csv'
 def get_repo_urls()->pd.Series:
     if os.path.isfile(REPOS_CSV):
         return pd.read_csv(REPOS_CSV)
@@ -114,13 +115,19 @@ def process_repo(repo: str) -> Dict[str, str]:
     }
 
 
-def scrape_github_data() -> List[Dict[str, str]]:
+def scrape_github_data() -> pd.DataFrame:
     """
     Loop through all of the repos and process them. Returns the processed data.
     """
-    return pd.DataFrame([process_repo(repo) for repo in REPOS])
+    return [process_repo(repo) for repo in REPOS]
 
-
+def acquire_readmes()-> pd.DataFrame:
+    if os.path.exists(READMES_CSV):
+        pd.read_csv(READMES_CSV,index_col=0)
+    readme_df = pd.DataFrame(scrape_github_data())
+    readme_df.to_csv(READMES_CSV)
+    return readme_df
+    
 if __name__ == "__main__":
     data = scrape_github_data()
     json.dump(data, open("data.json", "w"), indent=1)
