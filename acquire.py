@@ -8,8 +8,11 @@ To create the `data.json` file that contains the data.
 """
 import os
 import json
+import pandas as pd
+import time
 from typing import Dict, List, Optional, Union, cast
 import requests
+from bs4 import BeautifulSoup
 
 from env import github_token, github_username
 
@@ -21,7 +24,20 @@ from env import github_token, github_username
 
 # TODO: Write a function to pull in starred repos
 
-
+REPOS_CSV = 'repos.csv'
+def get_repo_urls()->pd.Series:
+    if os.path.isfile(REPOS_CSV):
+        return pd.read_csv(REPOS_CSV)
+    all_links = []
+    for p in range(1,51):
+        response = requests.get(f'https://github.com/search?p={p}&q=stars%3A%3E0&s=stars&type=Repositories').content
+        bs = BeautifulSoup(response)
+        all_links += ['https://github.com' + l['href'] for l in bs.find_all('a',class_='v-align-middle')]
+        time.sleep(5)
+    lonks = pd.Series(all_links)
+    lonks.to_csv(REPOS_CSV,index=False)
+    
+    return lonks
 REPOS = [
     "gocodeup/codeup-setup-script",
     "gocodeup/movies-application",
