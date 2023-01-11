@@ -68,3 +68,27 @@ def prep_df_for_nlp(df: pd.DataFrame, ser: str,
     df['stem'] = df['clean'].apply(stem)
     df['lemmatized'] = df['clean'].apply(lemmatize)
     return df
+
+############################################################ DIRECT CALLS FOR LANGUAGE SERIES
+
+def series_generator(df):
+    '''This function takes in the data frame from 
+    prep_df_for_nlp and creates 6 pd.Series based on 
+    the programing language. The series creates are 
+    lists of strings that are the words in the READMEs'''
+    
+    # generates series for the top five languages
+    JavaScript_words_series = (' '.join(df[df.language == 'JavaScript']['readme_contents']))
+    Python_words_series = (' '.join(df[df.language == 'Python']['readme_contents']))
+    TypeScript_words_series = (' '.join(df[df.language == 'TypeScript']['readme_contents']))
+    Go_words_words_series = (' '.join(df[df.language == 'Go']['readme_contents']))
+    Java_words_series = (' '.join(df[df.language == 'Java']['readme_contents']))
+
+    # a series of words for all readme contents
+    all_words_series = (' '.join(df['readme_contents']))
+
+
+
+
+
+
