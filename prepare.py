@@ -203,8 +203,8 @@ def series_generator(df):
     all_words_series = (' '.join(df['readme_contents']))
     
     
-    # returned in order of: javascript_series, python_series, type_series, go_series, java_series, all_words_series
-    return javascript_words_series, python_words_series, typescript_words_series, go_words_series, java_words_series, all_words_series
+    # returned in order of: javascript_series, python_series, type_series, go_series, java_series, unlisted, other, all_words_series
+    return javascript_words_series, python_words_series, typescript_words_series, go_words_series, java_words_series,language_not_listed_series,other_series, all_words_series 
 
 
 
