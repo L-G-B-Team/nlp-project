@@ -156,6 +156,9 @@ def series_generator(df):
     the programing language. The series creates are 
     lists of strings that are the words in the READMEs'''
     
+    # uses prep_df_for_nlp to all categories to language column
+    df = prep_df_for_nlp(df)
+    
     # generates series for the top five languages
     javascript_words_series = (' '.join(df[df.language == 'JavaScript']['readme_contents']))
     python_words_series = (' '.join(df[df.language == 'Python']['readme_contents']))
@@ -163,9 +166,15 @@ def series_generator(df):
     go_words_series = (' '.join(df[df.language == 'Go']['readme_contents']))
     java_words_series = (' '.join(df[df.language == 'Java']['readme_contents']))
 
+    # generates series for the languages not listed and not in the top 5
+    language_not_listed_series = (' '.join(df[df.language == 'Not Listed']['readme_contents']))
+    other_series = (' '.join(df[df.language == 'Other']['readme_contents']))
+    
     # a series of words for all readme contents
     all_words_series = (' '.join(df['readme_contents']))
     
+    
+    # returned in order of: javascript_series, python_series, type_series, go_series, java_series, all_words_series
     return javascript_words_series, python_words_series, typescript_words_series, go_words_series, java_words_series, all_words_series
 
 
