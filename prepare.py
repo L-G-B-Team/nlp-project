@@ -53,7 +53,8 @@ def remove_stopwords(tokens: str,
     return ' '.join(stopped)
 
 
-def squeaky_clean(string: str, extra_words: List[str] = [], exclude_words: List[str] = []) -> str:
+def squeaky_clean(string: str, extra_words: List[str] = [],
+                  exclude_words: List[str] = []) -> str:
     string = basic_clean(string)
     string = tokenize(string)
     return remove_stopwords(string, extra_words, exclude_words)
