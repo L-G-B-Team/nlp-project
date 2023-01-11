@@ -123,7 +123,7 @@ def scrape_github_data() -> pd.DataFrame:
 
 def acquire_readmes()-> pd.DataFrame:
     if os.path.exists(READMES_CSV):
-        pd.read_csv(READMES_CSV,index_col=0)
+        return pd.read_csv(READMES_CSV,index_col=0)
     readme_df = pd.DataFrame(scrape_github_data())
     readme_df.to_csv(READMES_CSV)
     return readme_df
