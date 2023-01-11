@@ -188,9 +188,6 @@ def series_generator(df):
     the programing language. The series creates are 
     lists of strings that are the words in the READMEs'''
     
-    # uses prep_df_for_nlp to all categories to language column
-    df = prep_df_for_nlp(df)
-    
     # generates series for the top five languages
     javascript_words_series = (' '.join(df[df.language == 'JavaScript']['readme_contents']))
     python_words_series = (' '.join(df[df.language == 'Python']['readme_contents']))
