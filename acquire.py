@@ -18,7 +18,8 @@ from env import github_token, github_username
 #        You do _not_ need select any scopes, i.e. leave all the checkboxes unchecked
 #     2. Save it in your env.py file under the variable `github_token`
 # TODO: Add your github username to your env.py file under the variable `github_username`
-# TODO: Add more repositories to the `REPOS` list below.
+
+# TODO: Write a function to pull in starred repos
 
 REPOS = [
     "gocodeup/codeup-setup-script",
