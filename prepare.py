@@ -138,7 +138,7 @@ def prep_df_for_nlp(df: pd.DataFrame, series_to_prep: str,
     language_mask = ~df.language.isin(TOP_5_LANGUAGES)
     df.loc[language_mask, 'language'] = 'Other'
     # changes language to category
-    df.language = df.language.astype('cat')
+    df.language = df.language.astype('category')
 
     return df
 
