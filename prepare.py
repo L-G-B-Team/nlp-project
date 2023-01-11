@@ -12,6 +12,38 @@ stopwords = stpwrds.words('english')
 
 LANGUAGE_COUNT = 5
 
+EXTRA_WORDS = ['&#9;',
+ 'example',
+ 'api',
+ 'data',
+ 'return',
+ 'support',
+ 'new',
+ 'image',
+ 'install',
+ 'version',
+ 'img',
+ 'build',
+ 'object',
+ 'open',
+ 'user',
+ '3',
+ 'td',
+ 'web',
+ 'docker',
+ 'opensource',
+ 'server',
+ 'option',
+ 'type',
+ 'tool',
+ 'test',
+ 'method',
+ 'list',
+ 'name',
+ 'number',
+ 'import',
+ 'string']
+
 
 def basic_clean(string: str) -> str:
     '''
