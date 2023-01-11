@@ -38,11 +38,7 @@ def get_repo_urls()->pd.Series:
     lonks.to_csv(REPOS_CSV,index=False)
     
     return lonks
-REPOS = [
-    "gocodeup/codeup-setup-script",
-    "gocodeup/movies-application",
-    "torvalds/linux",
-]
+REPOS = get_repo_urls()['0'].to_list()
 
 headers = {"Authorization": f"token {github_token}", "User-Agent": github_username}
 
@@ -122,7 +118,7 @@ def scrape_github_data() -> List[Dict[str, str]]:
     """
     Loop through all of the repos and process them. Returns the processed data.
     """
-    return [process_repo(repo) for repo in REPOS]
+    return pd.DataFrame([process_repo(repo) for repo in REPOS])
 
 
 if __name__ == "__main__":
