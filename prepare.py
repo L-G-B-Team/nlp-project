@@ -10,7 +10,7 @@ from nltk.corpus import stopwords as stpwrds
 
 stopwords = stpwrds.words('english')
 
-TOP_5_LANGUAGES = ['JavaScript', 'Python', 'TypeScript', 'Go', 'Java']
+LANGUAGE_COUNT = 5
 
 
 def basic_clean(string: str) -> str:
@@ -136,15 +136,19 @@ def prep_df_for_nlp(df: pd.DataFrame, series_to_prep: str,
     # lemmatizes clean data
     df['lemmatized'] = df['clean'].apply(lemmatize)
     # change languages other than Top 5 languages to other
-    language_mask = (~df.language.isin(TOP_5_LANGUAGES)
+    top_n_languages = df.language.value_counts(
+    )[:LANGUAGE_COUNT].index.to_list()
+    language_mask = (~df.language.isin(top_n_languages)
                      & ~df.language.isna())
     df.loc[language_mask, 'language'] = 'Other'
+    df.loc[df.language.isna(), 'language'] = 'Not Listed'
     # changes language to category
     df.language = df.language.astype('category')
 
     return df
 
-############################################################ DIRECT CALLS FOR LANGUAGE SERIES
+# DIRECT CALLS FOR LANGUAGE SERIES
+
 
 def series_generator(df):
     '''This function takes in the data frame from 
