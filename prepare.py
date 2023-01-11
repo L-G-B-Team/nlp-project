@@ -16,9 +16,9 @@ TOP_5_LANGUAGES = ['JavaScript', 'Python', 'TypeScript', 'Go', 'Java']
 def basic_clean(string: str) -> str:
     '''
     Cleans string by converting to lower case and removing non-ACII characters
-    ## Parameters
+    # Parameters
     string: string to be cleaned
-    ## Returns
+    # Returns
     cleaned string
     '''
     string = string.lower()
@@ -31,9 +31,9 @@ def basic_clean(string: str) -> str:
 def tokenize(string: str) -> str:
     '''
     Tokenizes a given string
-    ## Parameters
+    # Parameters
     string: string to be tokenized
-    ## Returns
+    # Returns
     tokenized string
     '''
     tok = nltk.tokenize.ToktokTokenizer()
@@ -43,9 +43,9 @@ def tokenize(string: str) -> str:
 def stem(tokens: str) -> str:
     '''
     Stems given string
-    ## Parameters
+    # Parameters
     tokens: tokenized string to be stemmed
-    ## Returns
+    # Returns
     stemmed string
     '''
     ps = nltk.porter.PorterStemmer()
@@ -56,9 +56,9 @@ def stem(tokens: str) -> str:
 def lemmatize(tokens: str) -> str:
     '''
     Lemmatizes given string
-    ## Parameters
+    # Parameters
     tokens: tokenized string to be lemmatized
-    ## Returns
+    # Returns
     lemmatized string
     '''
     lem = nltk.stem.WordNetLemmatizer()
@@ -71,13 +71,13 @@ def remove_stopwords(tokens: str,
                      exclude_words: List[str] = []) -> str:
     '''
     Removes stop words from string
-    ## Parameters
+    # Parameters
     tokenized: initial string
 
     extra_words: list of strings of additional stop words to remove
 
     exclude_words: list of strings of stop words to keep in strings
-    ## Returns
+    # Returns
     string with stopwords removed
     '''
     tokens = [t for t in tokens.split()]
@@ -93,13 +93,13 @@ def squeaky_clean(string: str, extra_words: List[str] = [],
                   exclude_words: List[str] = []) -> str:
     '''
     cleans, tokenizes, and removes stop words from string
-    ## Parameters
+    # Parameters
     string: string to be cleaned
 
     extra_words: list of strings of additional stop words to remove
 
     exclude_words: list of strings of stop words to keep in strings
-    ## Returns
+    # Returns
     The cleaned string
     '''
     string = basic_clean(string)
@@ -114,7 +114,7 @@ def prep_df_for_nlp(df: pd.DataFrame, series_to_prep: str,
     Cleans and prepares a `DataFrame` for NLP,
     adds cleaned, stemmed, and lemmatized columns
     and collapses languages outside the top 5 to 'Other'
-    ## Parameters
+    # Parameters
         df: `DataFrame` to be cleaned
 
         series_to_prep: name of the series to be prepared within `df`
@@ -123,10 +123,11 @@ def prep_df_for_nlp(df: pd.DataFrame, series_to_prep: str,
 
         exclude_words: list of strings of stop words to keep in strings
 
-    ## Returns
+    # Returns
     Prepared `DataFrame` with additional columns containing cleaned data,
     stemmmed, and lemmatized data
     '''
+    df.readme_contents = df.readme_contents.astype('str')
     # Clean data
     df['clean'] = df[series_to_prep].apply(
         squeaky_clean, exclude_words=exclude_words, extra_words=extra_words)
@@ -135,7 +136,8 @@ def prep_df_for_nlp(df: pd.DataFrame, series_to_prep: str,
     # lemmatizes clean data
     df['lemmatized'] = df['clean'].apply(lemmatize)
     # change languages other than Top 5 languages to other
-    language_mask = ~df.language.isin(TOP_5_LANGUAGES)
+    language_mask = (~df.language.isin(TOP_5_LANGUAGES)
+                     & ~df.language.isna())
     df.loc[language_mask, 'language'] = 'Other'
     # changes language to category
     df.language = df.language.astype('category')
