@@ -25,17 +25,17 @@ def get_repo_urls() -> pd.Series:
     ## Returns
     a `Series` containing hrefs to repositories
     '''
-    #check if repository info already cached.
+    # check if repository info already cached.
     if os.path.isfile(REPOS_CSV):
         return pd.read_csv(REPOS_CSV)['0']
     all_links = []
-    #requests pages 1 to 151
+    # requests pages 1 to 151
     for p in range(1, 151):
         response = requests.get(
             f'https://github.com/search?p={p}'
             '&q=stars%3A%3E0&s=stars&type=Repositories').content
         bs = BeautifulSoup(response, 'html.parser')
-        #scrapes href from object containing repository link
+        # scrapes href from object containing repository link
         all_links += [link['href']
                       for link in bs.find_all('a', class_='v-align-middle')]
         time.sleep(5)
@@ -135,13 +135,13 @@ def scrape_github_data() -> pd.DataFrame:
 
 
 def acquire_readmes() -> pd.DataFrame:
-   '''
-   Acquires README text from GitHub repositories
-   ## Parameters
-   None
-   ## Returns
-   `DataFrame` of README information contained in REPOS
-   '''
+    '''
+    Acquires README text from GitHub repositories
+    ## Parameters
+    None
+    ## Returns
+    `DataFrame` of README information contained in REPOS
+    '''
     if os.path.exists(READMES_CSV):
         return pd.read_csv(READMES_CSV, index_col=0)
     readme_df = pd.DataFrame(scrape_github_data())
