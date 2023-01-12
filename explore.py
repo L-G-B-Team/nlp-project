@@ -110,7 +110,8 @@ def generate_word_cloud(ser: pd.Series, ngram: int = 1,
     plt.show()
 
 
-def get_word_frequency(readme: str) -> List[Tuple[str, int]]:
+def get_word_frequency(readme: str) -> pd.Series:
+    # TODO Docstring
     val_counts = pd.Series(readme.split()).value_counts()[:5]
     ret_ser = pd.Series()
     for index, word, count in zip(range(1, 6), val_counts.index, val_counts):
@@ -120,6 +121,7 @@ def get_word_frequency(readme: str) -> List[Tuple[str, int]]:
 
 
 def top_five_words(series: pd.Series) -> pd.DataFrame:
+    # TODO Docstring
     readme_counts = series.apply(get_word_frequency)
     for i in range(1, 6):
         readme_counts[f'count_{i}'].fillna(0)
