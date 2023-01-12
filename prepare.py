@@ -184,10 +184,11 @@ def prep_df_for_nlp(df: pd.DataFrame, series_to_prep: str,
 # DIRECT CALLS FOR LANGUAGE SERIES
 
 
-def series_generator(df: pd.DataFrame) -> Tuple[str, str, str, str, str, str, str]:
-    '''This function takes in the data frame from 
-    prep_df_for_nlp and creates 6 pd.Series based on 
-    the programing language. The series creates are 
+def series_generator(df: pd.DataFrame) -> Tuple[str, str, str, str,
+                                                str, str, str]:
+    '''This function takes in the data frame from
+    prep_df_for_nlp and creates 6 pd.Series based on
+    the programing language. The series creates are
     lists of strings that are the words in the READMEs'''
 
     # generates series for the top five languages
@@ -221,13 +222,16 @@ def generate_series(content: pd.Series, separator: pd.Series) -> Dict[str, str]:
     return ret_dict
 
 
-def split_data(df, target, test_size=0.15):
+def split_data(df: pd.DataFrame, target: str, test_size: float = 0.15):
     '''
     Takes in a data frame and the train size
     It returns train, validate , and test data frames
     with validate being 0.05 bigger than test and train has the rest of the data.
     '''
-    train, test = train_test_split(df, stratify=df[target], test_size = test_size , random_state=27)
-    train, validate = train_test_split(train,  stratify=train[target], test_size = (test_size + 0.05)/(1-test_size), random_state=27)
-    
+    train, test = train_test_split(
+        df, stratify=df[target], test_size=test_size, random_state=27)
+    train, validate = train_test_split(train,  stratify=train[target],
+                                       test_size=(
+        test_size + 0.05)/(1-test_size), random_state=27)
+
     return train, validate, test
