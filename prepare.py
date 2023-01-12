@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import nltk
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple,Union
 import re
 from nltk.corpus import stopwords as stpwrds
 
@@ -215,9 +215,11 @@ def series_generator(df: pd.DataFrame) -> Tuple[str, str, str, str,
             all_words_series)
 
 
-def generate_series(content: pd.Series, separator: pd.Series) -> Dict[str, str]:
+def generate_series(content: pd.Series, separator: Union[pd.Series,None] = None) -> Union[Dict[str, str],str]:
     # TODO Docstring
     ret_dict = {}
+    if separator is None:
+        return ' '.join(content.to_list())
     for s in separator.unique():
         indices = separator[separator == s].index
         ret_dict[s] = ' '.join(content.iloc[indices].to_list())

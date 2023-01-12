@@ -1,11 +1,14 @@
-from typing import Union, List, Tuple
+from typing import List, Tuple, Union
 
 import matplotlib.pyplot as plt
 import nltk
 import numpy as np
 import pandas as pd
-from wordcloud import WordCloud
+import seaborn as sns
 from IPython.display import Markdown as md
+from wordcloud import WordCloud
+
+import prepare as p
 
 
 def p_to_md(p: float, alpha: float = .05, **kwargs) -> md:
@@ -143,3 +146,25 @@ def split_by_language(df):
     typescript = df[df.language == 'TypeScript']
     
     return go, java, javascript, not_listed, other, python, typescript
+
+def top_words_by_group(df:pd.DataFrame,content:str='lemmatized',separator:str = 'language')->pd.DataFrame:
+    # TODO Docstring
+    total_items = df.shape[0]
+    words = p.generate_series(df[content])
+    top_ten = pd.Series(words.split()).value_counts()[:10]
+    percentage_lst = []
+    for s in df[separator].unique():
+        ser = pd.Series(name=s)
+        for w in top_ten.index:
+            containment_mask = (df[separator] == s) & (df[content].str.contains(w))
+            ser[w] = df[containment_mask].shape[0] / total_items
+        percentage_lst.append(ser)
+    ret_frame =  pd.concat(percentage_lst,axis=1).T
+    total_values = df[separator].value_counts(normalize=True).T
+    total_values.name = 'All'
+    ret_frame = pd.concat([total_values,ret_frame],axis=1).T
+    return ret_frame
+        
+def word_heat_map(df:pd.DataFrame)->None:
+    # TODO Docstring
+    sns.heatmap(top_words_by_group(df))
