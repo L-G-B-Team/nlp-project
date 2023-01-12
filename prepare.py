@@ -209,3 +209,15 @@ def series_generator(df):
 
     # returned in order of: javascript_series, python_series, type_series, go_series, java_series, unlisted, other, all_words_series
     return (javascript_words_series, python_words_series, typescript_words_series, go_words_series, java_words_series, language_not_listed_series, other_series, all_words_series)
+
+
+def split_data(df, target, test_size=0.15):
+    '''
+    Takes in a data frame and the train size
+    It returns train, validate , and test data frames
+    with validate being 0.05 bigger than test and train has the rest of the data.
+    '''
+    train, test = train_test_split(df, stratify=df[target], test_size = test_size , random_state=27)
+    train, validate = train_test_split(train,  stratify=train[targe], test_size = (test_size + 0.05)/(1-test_size), random_state=27)
+    
+    return train, validate, test
