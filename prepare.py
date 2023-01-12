@@ -220,6 +220,6 @@ def split_data(df, target, test_size=0.15):
     with validate being 0.05 bigger than test and train has the rest of the data.
     '''
     train, test = train_test_split(df, stratify=df[target], test_size = test_size , random_state=27)
-    train, validate = train_test_split(train,  stratify=train[targe], test_size = (test_size + 0.05)/(1-test_size), random_state=27)
+    train, validate = train_test_split(train,  stratify=train[target], test_size = (test_size + 0.05)/(1-test_size), random_state=27)
     
     return train, validate, test
