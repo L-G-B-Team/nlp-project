@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List, Tuple
 
 import matplotlib.pyplot as plt
 import nltk
@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from wordcloud import WordCloud
 from IPython.display import Markdown as md
+
 
 def p_to_md(p: float, alpha: float = .05, **kwargs) -> md:
     '''
@@ -73,9 +74,9 @@ def t_to_md(p: float, t: float, alpha: float = .05, **kwargs):
                 f'we {"failed to " if ~(t_flag & p_flag) else ""} '
                 ' reject $H_0$')
     return md(ret_str)
-    
 
-def get_ngram_frequency(ser: Union[pd.Series,str], n: int = 1) -> pd.Series:
+
+def get_ngram_frequency(ser: Union[pd.Series, str], n: int = 1) -> pd.Series:
     '''
     Generates a series of the frequency of occurences
     of ngrams in provided documents
@@ -85,7 +86,7 @@ def get_ngram_frequency(ser: Union[pd.Series,str], n: int = 1) -> pd.Series:
     ## Returns
     a `Series` showing the value counts of each ngram
     '''
-    if isinstance(ser,pd.Series):
+    if isinstance(ser, pd.Series):
         words = ' '.join(ser).split()
     else:
         words = ser.split()
@@ -107,3 +108,21 @@ def generate_word_cloud(ser: pd.Series, ngram: int = 1,
         return ax
     plt.imshow(wc)
     plt.show()
+
+
+def get_word_frequency(readme: str) -> List[Tuple[str, int]]:
+    val_counts = pd.Series(readme.split()).value_counts()[:5]
+    ret_ser = pd.Series()
+    for index, word, count in zip(range(1, 6), val_counts.index, val_counts):
+        ret_ser[f'word_{index}'] = word
+        ret_ser[f'count_{index}'] = count
+    return ret_ser
+
+
+def top_five_words(series: pd.Series) -> pd.DataFrame:
+    readme_counts = series.apply(get_word_frequency)
+    for i in range(1, 6):
+        readme_counts[f'count_{i}'].fillna(0)
+        readme_counts[f'count_{i}'] = readme_counts[f'count_{i}'
+                                                    ].fillna(0).astype('int')
+    return readme_counts
