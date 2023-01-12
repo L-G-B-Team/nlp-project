@@ -107,3 +107,19 @@ def generate_word_cloud(ser: pd.Series, ngram: int = 1,
         return ax
     plt.imshow(wc)
     plt.show()
+
+    
+def split_by_language(df):
+    '''
+    Takes in the dataframe and splits on the languages
+    Returns seven dataframes, one per language
+    '''
+    go = df[df.language == 'Go']
+    java = df[df.language == 'Java']
+    javascript = df[df.language == 'JavaScript']
+    not_listed = df[df.language == 'Not Listed']
+    other = df[df.language == 'Other']
+    python = df[df.language == 'Python']
+    typescript = df[df.language == 'TypeScript']
+    
+    return go, java, javascript, not_listed, other, python, typescript
