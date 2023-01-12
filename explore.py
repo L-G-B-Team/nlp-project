@@ -126,3 +126,18 @@ def top_five_words(series: pd.Series) -> pd.DataFrame:
         readme_counts[f'count_{i}'] = readme_counts[f'count_{i}'
                                                     ].fillna(0).astype('int')
     return readme_counts
+    
+def split_by_language(df):
+    '''
+    Takes in the dataframe and splits on the languages
+    Returns seven dataframes, one per language
+    '''
+    go = df[df.language == 'Go']
+    java = df[df.language == 'Java']
+    javascript = df[df.language == 'JavaScript']
+    not_listed = df[df.language == 'Not Listed']
+    other = df[df.language == 'Other']
+    python = df[df.language == 'Python']
+    typescript = df[df.language == 'TypeScript']
+    
+    return go, java, javascript, not_listed, other, python, typescript
