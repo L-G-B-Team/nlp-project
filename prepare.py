@@ -58,6 +58,8 @@ def basic_clean(string: str) -> str:
     string = string.lower()
     string = unicodedata.normalize('NFKD', string).encode(
         'ascii', 'ignore').decode('utf-8', 'ignore')
+    string = re.sub(r'<.+>','',string)
+    string = re.sub(r'https\:\/\/[a-z0-9\./\&\?=]','',string)
     string = re.sub(r"[^a-z0-9\s]", '', string)
     return string
 
