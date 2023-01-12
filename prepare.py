@@ -15,6 +15,8 @@ stopwords = stpwrds.words('english')
 LANGUAGE_COUNT = 5
 
 EXTRA_WORDS = ['&#9;',
+               'div',
+               'span'
                'example',
                'api',
                'data',
@@ -164,7 +166,7 @@ def prep_df_for_nlp(df: pd.DataFrame, series_to_prep: str,
     df.readme_contents = df.readme_contents.astype('str')
     # Clean data
     df['clean'] = df[series_to_prep].apply(
-        squeaky_clean, exclude_words=exclude_words, extra_words=extra_words)
+        squeaky_clean, exclude_words=exclude_words, extra_words=EXTRA_WORDS)
     # Stem cleaned data
     df['stem'] = df['clean'].apply(stem)
     # lemmatizes clean data
