@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import nltk
 import numpy as np
 import pandas as pd
-from typing import List
+from typing import Dict, List, Tuple
 import re
 from nltk.corpus import stopwords as stpwrds
 
@@ -186,42 +186,54 @@ def prep_df_for_nlp(df: pd.DataFrame, series_to_prep: str,
 # DIRECT CALLS FOR LANGUAGE SERIES
 
 
-def series_generator(df):
-    '''This function takes in the data frame from 
-    prep_df_for_nlp and creates 6 pd.Series based on 
-    the programing language. The series creates are 
+def series_generator(df: pd.DataFrame) -> Tuple[str, str, str, str,
+                                                str, str, str]:
+    '''This function takes in the data frame from
+    prep_df_for_nlp and creates 6 pd.Series based on
+    the programing language. The series creates are
     lists of strings that are the words in the READMEs'''
 
     # generates series for the top five languages
-    javascript_words_series = (
-        ' '.join(df[df.language == 'JavaScript']['readme_contents']))
-    python_words_series = (
-        ' '.join(df[df.language == 'Python']['readme_contents']))
-    typescript_words_series = (
-        ' '.join(df[df.language == 'TypeScript']['readme_contents']))
-    go_words_series = (' '.join(df[df.language == 'Go']['readme_contents']))
-    java_words_series = (
-        ' '.join(df[df.language == 'Java']['readme_contents']))
+    series_dict = generate_series(df.lemmatized, df.language)
+    javascript_words_series = series_dict['JavaScript']
+    python_words_series = series_dict['Python']
+    typescript_words_series = series_dict['TypeScript']
+    go_words_series = series_dict['Go']
+    other_series = series_dict['Other']
+    language_not_listed_series = series_dict['Not Listed']
+    java_words_series = series_dict['Java']
+    all_words_series = series_dict['All']
 
-    # generates series for the languages not listed and not in the top 5
-    language_not_listed_series = (
-        ' '.join(df[df.language == 'Not Listed']['readme_contents']))
-    other_series = (' '.join(df[df.language == 'Other']['readme_contents']))
-
-    # a series of words for all readme contents
-    all_words_series = (' '.join(df['readme_contents']))
-
-    # returned in order of: javascript_series, python_series, type_series, go_series, java_series, unlisted, other, all_words_series
-    return (javascript_words_series, python_words_series, typescript_words_series, go_words_series, java_words_series, language_not_listed_series, other_series, all_words_series)
+    # returned in order of: javascript_series,
+    # python_series, type_series, go_series,
+    # java_series, unlisted, other, all_words_series
+    return (javascript_words_series, python_words_series,
+            typescript_words_series, go_words_series,
+            java_words_series, language_not_listed_series, other_series,
+            all_words_series)
 
 
-def split_data(df, target, test_size=0.15):
+def generate_series(content: pd.Series, separator: pd.Series) -> Dict[str, str]:
+    # TODO Docstring
+    ret_dict = {}
+    for s in separator.unique():
+        indices = separator[separator == s].index
+        ret_dict[s] = ' '.join(content.iloc[indices].to_list())
+    ret_dict['All'] = ' '.join(content.to_list())
+
+    return ret_dict
+
+
+def split_data(df: pd.DataFrame, target: str, test_size: float = 0.15):
     '''
     Takes in a data frame and the train size
     It returns train, validate , and test data frames
     with validate being 0.05 bigger than test and train has the rest of the data.
     '''
-    train, test = train_test_split(df, stratify=df[target], test_size = test_size , random_state=27)
-    train, validate = train_test_split(train,  stratify=train[target], test_size = (test_size + 0.05)/(1-test_size), random_state=27)
-    
+    train, test = train_test_split(
+        df, stratify=df[target], test_size=test_size, random_state=27)
+    train, validate = train_test_split(train,  stratify=train[target],
+                                       test_size=(
+        test_size + 0.05)/(1-test_size), random_state=27)
+
     return train, validate, test
