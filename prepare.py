@@ -8,6 +8,8 @@ from typing import Dict, List, Tuple
 import re
 from nltk.corpus import stopwords as stpwrds
 
+from sklearn.model_selection import train_test_split
+
 stopwords = stpwrds.words('english')
 
 LANGUAGE_COUNT = 5
@@ -199,6 +201,9 @@ def series_generator(df: pd.DataFrame) -> Tuple[str, str, str, str, str, str, st
     java_words_series = series_dict['Java']
     all_words_series = series_dict['All']
 
+    # returned in order of: javascript_series,
+    # python_series, type_series, go_series,
+    # java_series, unlisted, other, all_words_series
     return (javascript_words_series, python_words_series,
             typescript_words_series, go_words_series,
             java_words_series, language_not_listed_series, other_series,
@@ -214,3 +219,15 @@ def generate_series(content: pd.Series, separator: pd.Series) -> Dict[str, str]:
     ret_dict['All'] = ' '.join(content.to_list())
 
     return ret_dict
+
+
+def split_data(df, target, test_size=0.15):
+    '''
+    Takes in a data frame and the train size
+    It returns train, validate , and test data frames
+    with validate being 0.05 bigger than test and train has the rest of the data.
+    '''
+    train, test = train_test_split(df, stratify=df[target], test_size = test_size , random_state=27)
+    train, validate = train_test_split(train,  stratify=train[target], test_size = (test_size + 0.05)/(1-test_size), random_state=27)
+    
+    return train, validate, test
