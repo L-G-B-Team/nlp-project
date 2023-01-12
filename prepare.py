@@ -4,45 +4,47 @@ import matplotlib.pyplot as plt
 import nltk
 import numpy as np
 import pandas as pd
-from typing import List
+from typing import Dict, List, Tuple,Union
 import re
 from nltk.corpus import stopwords as stpwrds
+
+from sklearn.model_selection import train_test_split
 
 stopwords = stpwrds.words('english')
 
 LANGUAGE_COUNT = 5
 
-EXTRA_WORDS = ['&#9;',
-               'example',
+EXTRA_WORDS = ['&#9;', 
+               '3', 
                'api',
-               'data',
-               'return',
-               'support',
-               'new',
-               'image',
-               'install',
-               'version',
-               'img',
                'build',
-               'object',
-               'open',
-               'user',
-               '3',
-               'td',
-               'web',
-               'docker',
-               'opensource',
-               'server',
-               'option',
-               'type',
-               'tool',
-               'test',
-               'method',
-               'list',
-               'name',
-               'number',
-               'import',
-               'string']
+               'data', 
+               'docker', 
+               'example', 
+               'image', 
+               'img', 
+               'import', 
+               'install',
+               'list', 
+               'method', 
+               'name', 
+               'new', 
+               'number', 
+               'object', 
+               'open', 
+               'opensource', 
+               'option', 
+               'return', 
+               'server', 
+               'string', 
+               'support', 
+               'td', 
+               'test', 
+               'tool', 
+               'type', 
+               'user', 
+               'version', 
+               'web']
 
 
 def basic_clean(string: str) -> str:
@@ -56,6 +58,8 @@ def basic_clean(string: str) -> str:
     string = string.lower()
     string = unicodedata.normalize('NFKD', string).encode(
         'ascii', 'ignore').decode('utf-8', 'ignore')
+    string = re.sub(r'<.+>','',string)
+    string = re.sub(r'https\:\/\/[a-z0-9\./\&\?=]','',string)
     string = re.sub(r"[^a-z0-9\s]", '', string)
     return string
 
@@ -162,7 +166,7 @@ def prep_df_for_nlp(df: pd.DataFrame, series_to_prep: str,
     df.readme_contents = df.readme_contents.astype('str')
     # Clean data
     df['clean'] = df[series_to_prep].apply(
-        squeaky_clean, exclude_words=exclude_words, extra_words=extra_words)
+        squeaky_clean, exclude_words=exclude_words, extra_words=EXTRA_WORDS)
     # Stem cleaned data
     df['stem'] = df['clean'].apply(stem)
     # lemmatizes clean data
@@ -174,38 +178,66 @@ def prep_df_for_nlp(df: pd.DataFrame, series_to_prep: str,
                      & ~df.language.isna())
     df.loc[language_mask, 'language'] = 'Other'
     df.loc[df.language.isna(), 'language'] = 'Not Listed'
+    split_series = df.repo.apply(lambda s: s.split('/'))
+    df['username'] = split_series.apply(lambda arr: arr[0])
+    df.repo = split_series.apply(lambda arr: arr[1])
     # changes language to category
     df.language = df.language.astype('category')
-
+    # add character length of lemmatized content
+    df['lemmatized_len'] = df.lemmatized.apply(lambda s: len(s))
     return df
 
 # DIRECT CALLS FOR LANGUAGE SERIES
 
 
-def series_generator(df):
-    '''This function takes in the data frame from 
-    prep_df_for_nlp and creates 6 pd.Series based on 
-    the programing language. The series creates are 
+def series_generator(df: pd.DataFrame) -> Tuple[str, str, str, str,
+                                                str, str, str]:
+    '''This function takes in the data frame from
+    prep_df_for_nlp and creates 6 pd.Series based on
+    the programing language. The series creates are
     lists of strings that are the words in the READMEs'''
 
     # generates series for the top five languages
-    javascript_words_series = (
-        ' '.join(df[df.language == 'JavaScript']['readme_contents']))
-    python_words_series = (
-        ' '.join(df[df.language == 'Python']['readme_contents']))
-    typescript_words_series = (
-        ' '.join(df[df.language == 'TypeScript']['readme_contents']))
-    go_words_series = (' '.join(df[df.language == 'Go']['readme_contents']))
-    java_words_series = (
-        ' '.join(df[df.language == 'Java']['readme_contents']))
+    series_dict = generate_series(df.lemmatized, df.language)
+    javascript_words_series = series_dict['JavaScript']
+    python_words_series = series_dict['Python']
+    typescript_words_series = series_dict['TypeScript']
+    go_words_series = series_dict['Go']
+    other_series = series_dict['Other']
+    language_not_listed_series = series_dict['Not Listed']
+    java_words_series = series_dict['Java']
+    all_words_series = series_dict['All']
 
-    # generates series for the languages not listed and not in the top 5
-    language_not_listed_series = (
-        ' '.join(df[df.language == 'Not Listed']['readme_contents']))
-    other_series = (' '.join(df[df.language == 'Other']['readme_contents']))
+    # returned in order of: javascript_series, python_series, type_series, go_series, java_series,unlisted, other, all_words_series 
+    return (javascript_words_series, python_words_series,
+            typescript_words_series, go_words_series,
+            java_words_series, language_not_listed_series, other_series,
+            all_words_series)
 
-    # a series of words for all readme contents
-    all_words_series = (' '.join(df['readme_contents']))
 
-    # returned in order of: javascript_series, python_series, type_series, go_series, java_series, unlisted, other, all_words_series
-    return (javascript_words_series, python_words_series, typescript_words_series, go_words_series, java_words_series, language_not_listed_series, other_series, all_words_series)
+def generate_series(content: pd.Series, separator: Union[pd.Series,None] = None) -> Union[Dict[str, str],str]:
+    # TODO Docstring
+    ret_dict = {}
+    if separator is None:
+        return ' '.join(content.to_list())
+    for s in separator.unique():
+        indices = separator[separator == s].index
+        ret_dict[s] = ' '.join(content.iloc[indices].to_list())
+    ret_dict['All'] = ' '.join(content.to_list())
+
+    return ret_dict
+
+
+def split_data(df: pd.DataFrame, target: str, test_size: float = 0.15):
+    '''
+    Takes in a data frame and the train size
+    It returns train, validate , and test data frames
+    with validate being 0.05 bigger than test and train has the rest of the data.
+    '''
+    train, test = train_test_split(
+        df, stratify=df[target], test_size=test_size, random_state=27)
+    train, validate = train_test_split(train,  stratify=train[target],
+                                       test_size=(
+        test_size + 0.05)/(1-test_size), random_state=27)
+
+    return train, validate, test
