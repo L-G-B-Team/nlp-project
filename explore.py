@@ -74,9 +74,21 @@ def t_to_md(p: float, t: float, alpha: float = .05, **kwargs):
                 ' reject $H_0$')
     return md(ret_str)
     
-def get_ngram_frequency(ser: pd.Series, n: int = 1) -> pd.Series:
-    # TODO Docstring
-    words = ' '.join(ser).split()
+
+def get_ngram_frequency(ser: Union[pd.Series,str], n: int = 1) -> pd.Series:
+    '''
+    Generates a series of the frequency of occurences
+    of ngrams in provided documents
+    ## Parameters
+    ser: either a `Series` or `str containing the documents
+    n: no of words to use in ngrams. Default value of 1
+    ## Returns
+    a `Series` showing the value counts of each ngram
+    '''
+    if isinstance(ser,pd.Series):
+        words = ' '.join(ser).split()
+    else:
+        words = ser.split()
     if n > 1:
         ngrams = nltk.ngrams(words, n)
         words = [' '.join(n) for n in ngrams]
