@@ -8,6 +8,8 @@ from typing import List
 import re
 from nltk.corpus import stopwords as stpwrds
 
+from sklearn.model_selection import train_test_split
+
 stopwords = stpwrds.words('english')
 
 LANGUAGE_COUNT = 5
