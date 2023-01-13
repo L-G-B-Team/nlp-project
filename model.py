@@ -91,28 +91,32 @@ def tune_random_forest(features: pd.DataFrame, target: pd.Series,
     return pd.DataFrame(ret_ser)
 
 
-def scale(features: pd.DataFrame, scaler: MinMaxScaler) -> pd.DataFrame:
-    ret_df = pd.DataFrame()
+def scale(features: pd.Series, target:pd.Series,scaler: MinMaxScaler) -> pd.Series:
+    indexes = features.index
+    features = features.values.reshape(-1,1)
     try:
-        ret_df = pd.DataFrame(scaler.transform(features))
-    except NotFittedError:
-        ret_df = pd.DataFrame(scaler.fit_transform(features))
-    return ret_df
+        ret_series = scaler.transform(features)
+    except NotFittedError as e:
+        scaler = scaler.fit(features)
+        ret_series = scaler.transform(features)
+    return pd.DataFrame(ret_series,index=indexes,columns=['scaled_lemmatized_length'])
 
 
 def encode_has_language(df):
     '''
     Takes in df and returns it with added features
     '''
-    df['has_java'] = df.lemmatized.str.contains('java')
-    df['has_javascript'] = df.lemmatized.str.contains('javascript')
-    df['has_python'] = df.lemmatized.str.contains('python')
-    df['has_typescript'] = df.lemmatized.str.contains('typescript')
-    df['has_awesome'] = df.repo.str.contains('awesome')
-    df['has_react'] = df.repo.str.contains('react')
-    df['has_go'] = df.repo.str.contains('go')
+    ret_df = pd.DataFrame()
+    ret_df['has_java'] = df.lemmatized.str.contains('java')
+    ret_df['has_javascript'] = df.lemmatized.str.contains('javascript')
+    ret_df['has_python'] = df.lemmatized.str.contains('python')
+    ret_df['has_typescript'] = df.lemmatized.str.contains('typescript')
+    ret_df['has_awesome'] = df.repo.str.contains('awesome')
+    ret_df['has_react'] = df.repo.str.contains('react')
+    ret_df['has_go'] = df.repo.str.contains('go')
+    ret_df.index = df.index
     
-    return df
+    return ret_df
 
 def encode_for_model(train, validate, test):
     '''
