@@ -177,4 +177,4 @@ def top_ngrams_by_group(df: pd.DataFrame, top_n: int = 10, n: int = 1,
 def word_heat_map(df: pd.DataFrame, top_n: int = 10, n: int = 1) -> None:
     # TODO Docstring
     ngrams = top_ngrams_by_group(df, top_n, n)
-    sns.heatmap(ngrams,cmap='rainbow_r')
+    sns.heatmap(ngrams, cmap='rainbow_r')
