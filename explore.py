@@ -149,12 +149,18 @@ def split_by_language(df):
     return go, java, javascript, not_listed, other, python, typescript
 
 
-def top_ngrams_by_group(df: pd.DataFrame, content: str = 'lemmatized',
+def top_ngrams_by_group(df: pd.DataFrame, top_n: int = 10, n: int = 1,
+                        content: str = 'lemmatized',
                         separator: str = 'language') -> pd.DataFrame:
     # TODO Docstring
-    words = p.generate_series(df[content])
-    top_ten = pd.Series(words.split()).value_counts()
-    top_ten = top_ten[top_ten.index.str.len() > 3][:10]
+    top_ten = pd.Series()
+    if n > 1:
+        top_ten = get_ngram_frequency(df[content], n)
+        top_ten = top_ten[top_ten.index.str.len() > 3][:10]
+    else:
+        words = ' '.join(df[content].to_list())
+        top_ten = pd.Series(words.split()).value_counts()
+        top_ten = top_ten[top_ten.index.str.len() > 3][:10]
     percentage_lst = []
     for s in df[separator].unique():
         ser = pd.Series(name=s)
@@ -168,6 +174,7 @@ def top_ngrams_by_group(df: pd.DataFrame, content: str = 'lemmatized',
     return pd.concat(percentage_lst, axis=1)
 
 
-def word_heat_map(df: pd.DataFrame) -> None:
+def word_heat_map(df: pd.DataFrame, top_n: int = 10, n: int = 1) -> None:
     # TODO Docstring
-    sns.heatmap(top_ngrams_by_group(df))
+    ngrams = top_ngrams_by_group(df, top_n, n)
+    sns.heatmap(ngrams)

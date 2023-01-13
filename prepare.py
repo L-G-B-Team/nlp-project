@@ -47,7 +47,7 @@ EXTRA_WORDS = ['&#9;',
                'web']
 
 
-def basic_clean(string: str) -> str:
+def basic_clean(input_str: str) -> str:
     '''
     Cleans string by converting to lower case and removing non-ACII characters
     # Parameters
@@ -55,16 +55,17 @@ def basic_clean(string: str) -> str:
     # Returns
     cleaned string
     '''
-    string = string.lower()
-    string = unicodedata.normalize('NFKD', string).encode(
+    input_str = input_str.lower()
+    input_str = unicodedata.normalize('NFKD', input_str).encode(
         'ascii', 'ignore').decode('utf-8', 'ignore')
-    string = re.sub(r'<.+>','',string)
-    string = re.sub(r'https\:\/\/[a-z0-9\./\&\?=]','',string)
-    string = re.sub(r"[^a-z0-9\s]", '', string)
-    return string
+    input_str = re.sub(r'\<([^\s])+\s+.*\>([^\<])?\<\1\>','',input_str)
+    input_str = re.sub(r'https\:\/\/[^\s]','',input_str)
+    input_str = re.sub(r"[^a-z0-9\s\.]", '', input_str)
+    input_str = re.sub(r'\s*\.\s+','',input_str)
+    return input_str
 
 
-def tokenize(string: str) -> str:
+def tokenize(input_str: str) -> str:
     '''
     Tokenizes a given string
     # Parameters
@@ -73,7 +74,7 @@ def tokenize(string: str) -> str:
     tokenized string
     '''
     tok = nltk.tokenize.ToktokTokenizer()
-    return tok.tokenize(string, return_str=True)
+    return tok.tokenize(input_str, return_str=True)
 
 
 def stem(tokens: str) -> str:
@@ -124,8 +125,13 @@ def remove_stopwords(tokens: str,
     stopped = [t for t in tokens if t not in stopwords]
     return ' '.join(stopped)
 
+def remove_links_and_html(input_str:str)->str:
+    input_str = re.sub(r'\s+http(s)?://([^\s])+','',input_str)
+    input_str = re.sub(r'<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});','',input_str)
+    input_str = re.sub(r'/',' ',input_str)
+    return re.sub(r'\[([^\]]+)\]\(.*\)',r'\1',input_str)
 
-def squeaky_clean(string: str, extra_words: List[str] = [],
+def squeaky_clean(input_str: str, extra_words: List[str] = [],
                   exclude_words: List[str] = []) -> str:
     '''
     cleans, tokenizes, and removes stop words from string
@@ -138,9 +144,10 @@ def squeaky_clean(string: str, extra_words: List[str] = [],
     # Returns
     The cleaned string
     '''
-    string = basic_clean(string)
-    string = tokenize(string)
-    return remove_stopwords(string, extra_words, exclude_words)
+    input_str = remove_links_and_html(input_str)
+    input_str = basic_clean(input_str)
+    input_str = tokenize(input_str)
+    return remove_stopwords(input_str, extra_words, exclude_words)
 
 
 def prep_df_for_nlp(df: pd.DataFrame, series_to_prep: str,
