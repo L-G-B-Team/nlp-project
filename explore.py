@@ -1,3 +1,4 @@
+import pprint
 from typing import List, Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -5,16 +6,16 @@ import nltk
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from scipy import stats
 from IPython.display import Markdown as md
+from scipy import stats
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from wordcloud import WordCloud
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-import pprint
 
 import prepare as p
 
-#order the lanugages
-lang_order = ['JavaScript','TypeScript','Go', 'Python', 'Java','Other','Not Listed']
+# order the lanugages
+lang_order = ['JavaScript', 'TypeScript', 'Go',
+              'Python', 'Java', 'Other', 'Not Listed']
 
 
 def p_to_md(p: float, alpha: float = .05, **kwargs) -> md:
@@ -185,12 +186,15 @@ def word_heat_map(df: pd.DataFrame, top_n: int = 10, n: int = 1) -> None:
     ngrams = top_ngrams_by_group(df, top_n, n)
     sns.heatmap(ngrams)
 
+
 def language_distribution(df):
     # distribution of our repos by language
     fig = plt.figure(figsize=(20, 10))
     ax = plt.subplot(111)
-    sns.countplot(data=df, x='language', ax=ax, palette='colorblind', order=lang_order)
+    sns.countplot(data=df, x='language', ax=ax,
+                  palette='colorblind', order=lang_order)
     plt.show()
+
 
 def language_name_chi2(df, lang):
     series = df.language == lang
@@ -198,11 +202,13 @@ def language_name_chi2(df, lang):
     ctab = pd.crosstab(series, has_word)
     stat, p, degf, expected = stats.chi2_contingency(ctab)
     return p_to_md(p)
-    
+
+
 def language_name_percentage_plot(df):
-    #split into a df per language category
-    go, java, javascript, not_listed, other, python, typescript = split_by_language(df)
-    
+    # split into a df per language category
+    go, java, javascript, not_listed, other, python, typescript = split_by_language(
+        df)
+
     # get the word counts for each word in each readme by language
     javascript_words_freq = get_ngram_frequency(javascript.lemmatized)
     python_words_freq = get_ngram_frequency(python.lemmatized)
@@ -212,46 +218,53 @@ def language_name_percentage_plot(df):
     not_listed_freq = get_ngram_frequency(not_listed.lemmatized)
     java_words_freq = get_ngram_frequency(java.lemmatized)
     all_words_freq = get_ngram_frequency(df.lemmatized)
-    
-    #put all word counts together in a df
-    word_counts = (pd.concat([all_words_freq, javascript_words_freq,typescript_words_freq,go_words_freq, python_words_freq, java_words_freq, other_series_freq, not_listed_freq], axis=1, sort=True)
-                .set_axis(['all', 'javascript','typescript','go', 'python', 'java','other','not_listed'], axis=1, inplace=False)
-                .fillna(0)
-                .apply(lambda s: s.astype(int)))
-    
-    #limit to only the word counts of the names of programming languages 
-    word_counts_limited = word_counts[(word_counts.index=='javascript') | (word_counts.index=='python') | (word_counts.index=='typescript') | (word_counts.index=='go') | (word_counts.index=='java')]
-    
-    #plot the percentage of how many word count frequency
+
+    # put all word counts together in a df
+    word_counts = (pd.concat([all_words_freq, javascript_words_freq, typescript_words_freq, go_words_freq, python_words_freq, java_words_freq, other_series_freq, not_listed_freq], axis=1, sort=True)
+                   .set_axis(['all', 'javascript', 'typescript', 'go', 'python', 'java', 'other', 'not_listed'], axis=1, inplace=False)
+                   .fillna(0)
+                   .apply(lambda s: s.astype(int)))
+
+    # limit to only the word counts of the names of programming languages
+    word_counts_limited = word_counts[(word_counts.index == 'javascript') | (word_counts.index == 'python') | (
+        word_counts.index == 'typescript') | (word_counts.index == 'go') | (word_counts.index == 'java')]
+
+    # plot the percentage of how many word count frequency
     fig = plt.figure(figsize=(20, 10))
     ax = plt.subplot(111)
     plt.rcParams.update({'font.size': 12})
 
     (word_counts_limited.sort_values('all', ascending=False)
      .head(20)
-     .apply(lambda row: row/row['all'], axis = 1)
-     .drop(columns = 'all')
+     .apply(lambda row: row/row['all'], axis=1)
+     .drop(columns='all')
      .sort_values(by='javascript')
-     .plot.barh(stacked = True, width = 1, ec = 'k', legend=False, ax=ax, color=sns.color_palette('colorblind'))
-    )
+     .plot.barh(stacked=True, width=1, ec='k', legend=False, ax=ax, color=sns.color_palette('colorblind'))
+     )
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
               ncol=7, fancybox=True, shadow=True)
-    ax.set_xlim(0,1)
-    ax.set_xticks([0,.5,1],['0%','50%','100%'])
+    ax.set_xlim(0, 1)
+    ax.set_xticks([0, .5, 1], ['0%', '50%', '100%'])
     plt.show()
+
 
 def readme_len_plot(df):
     fig = plt.figure(figsize=(20, 10))
     ax = plt.subplot(111)
-    sns.barplot(x="language", y="lemmatized_len", data=df, palette='colorblind', ax=ax, order=lang_order)
+    sns.barplot(x="language", y="lemmatized_len", data=df,
+                palette='colorblind', ax=ax, order=lang_order)
     plt.show()
-    
+
+
 def readme_len_kruskal(df):
-    #split into a df per language category
-    go, java, javascript, not_listed, other, python, typescript = split_by_language(df)
-    
-    stat, p = stats.kruskal(go.lemmatized_len, java.lemmatized_len, javascript.lemmatized_len, not_listed.lemmatized_len, other.lemmatized_len, python.lemmatized_len, typescript.lemmatized_len)
+    # split into a df per language category
+    go, java, javascript, not_listed, other, python, typescript = split_by_language(
+        df)
+
+    stat, p = stats.kruskal(go.lemmatized_len, java.lemmatized_len, javascript.lemmatized_len,
+                            not_listed.lemmatized_len, other.lemmatized_len, python.lemmatized_len, typescript.lemmatized_len)
     return p_to_md(p)
+
 
 def title_chi2(df, word):
     lang = df.language
@@ -260,30 +273,31 @@ def title_chi2(df, word):
     stat, p, degf, expected = stats.chi2_contingency(ctab)
     return p_to_md(p)
 
+
 def get_idf(df):
     tfidf = TfidfVectorizer()
     bag_of_words = tfidf.fit_transform(df.lemmatized)
-    pd.DataFrame(bag_of_words.todense(), 
+    pd.DataFrame(bag_of_words.todense(),
                  columns=tfidf.get_feature_names_out())
     idf_values = pd.Series(
-    dict(
-        zip(
-            tfidf.get_feature_names_out(), tfidf.idf_)))
+        dict(
+            zip(
+                tfidf.get_feature_names_out(), tfidf.idf_)))
     return idf_values.describe()
+
 
 def percentage_of_language_per_word():
     df = pd.DataFrame({'word': ['React', 'Awesome', 'Go'],
-                            'Other': [7, 14, 33],
-                            'Go': [0, 0, 67],
-                            'JavaScript': [50, 7, 0],
-                            'TypeScript': [43, 0, 0],
-                            'NotListed': [0, 79, 0]})
+                       'Other': [7, 14, 33],
+                       'Go': [0, 0, 67],
+                       'JavaScript': [50, 7, 0],
+                       'TypeScript': [43, 0, 0],
+                       'NotListed': [0, 79, 0]})
     df.plot(
-    x = 'word',
-    kind = 'barh',
-    stacked = True,
-    title = 'Stacked Bar Graph',
-    mark_right = True)
+        x='word',
+        kind='barh',
+        stacked=True,
+        title='Stacked Bar Graph',
+        mark_right=True)
 
-    
     return(df)
