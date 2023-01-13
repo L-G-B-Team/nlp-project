@@ -3,6 +3,7 @@ import pandas as pd
 from typing import Union, Tuple
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.tree import DecisionTreeClassifier, plot_tree
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
@@ -32,7 +33,7 @@ def tune_decision_tree(features: pd.DataFrame, target: pd.Series,
                        max_depth: Tuple[int, int, int] = (2, 31, 1),
                        metric: callable = accuracy_score):
     '''
-    
+
     ## Parameters
     features: `DataFrame` of features to model on
     target: `Series` of target variable
@@ -81,10 +82,19 @@ def tune_random_forest(features: pd.DataFrame, target: pd.Series,
                           min_samples_leaf[1],
                           min_samples_leaf[2]):
             model = RandomForestClassifier(
-                max_depth=depth, min_samples_leaf=leaf,random_state=27)
+                max_depth=depth, min_samples_leaf=leaf, random_state=69)
             yhat = model_data(model, features, target,
                               result_suffix='min_samples_leaf_' + str(leaf))
             ret_sub_ser[yhat.name] = accuracy_score(target.to_numpy(),
                                                     yhat.to_numpy())
         ret_ser['max_depth_' + str(depth)] = ret_sub_ser
     return pd.DataFrame(ret_ser)
+
+
+def scale(features: pd.DataFrame, scaler: MinMaxScaler) -> pd.DataFrame:
+    ret_df = pd.DataFrame()
+    try:
+        ret_df = pd.DataFrame(scaler.transform(features))
+    except NotFittedError:
+        ret_df = pd.DataFrame(scaler.fit_transform(features))
+    return ret_df
