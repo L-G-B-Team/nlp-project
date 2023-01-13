@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import nltk
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Tuple,Union
+from typing import Dict, List, Tuple, Union
 import re
 from nltk.corpus import stopwords as stpwrds
 
@@ -14,36 +14,36 @@ stopwords = stpwrds.words('english')
 
 LANGUAGE_COUNT = 5
 
-EXTRA_WORDS = ['&#9;', 
-               '3', 
+EXTRA_WORDS = ['&#9;',
+               '3',
                'api',
                'build',
-               'data', 
-               'docker', 
-               'example', 
-               'image', 
-               'img', 
-               'import', 
+               'data',
+               'docker',
+               'example',
+               'image',
+               'img',
+               'import',
                'install',
-               'list', 
-               'method', 
-               'name', 
-               'new', 
-               'number', 
-               'object', 
-               'open', 
-               'opensource', 
-               'option', 
-               'return', 
-               'server', 
-               'string', 
-               'support', 
-               'td', 
-               'test', 
-               'tool', 
-               'type', 
-               'user', 
-               'version', 
+               'list',
+               'method',
+               'name',
+               'new',
+               'number',
+               'object',
+               'open',
+               'opensource',
+               'option',
+               'return',
+               'server',
+               'string',
+               'support',
+               'td',
+               'test',
+               'tool',
+               'type',
+               'user',
+               'version',
                'web']
 
 
@@ -58,10 +58,10 @@ def basic_clean(input_str: str) -> str:
     input_str = input_str.lower()
     input_str = unicodedata.normalize('NFKD', input_str).encode(
         'ascii', 'ignore').decode('utf-8', 'ignore')
-    input_str = re.sub(r'\<([^\s])+\s+.*\>([^\<])?\<\1\>','',input_str)
-    input_str = re.sub(r'https\:\/\/[^\s]','',input_str)
-    input_str = re.sub(r"[^a-z0-9\s\.]", '', input_str)
-    input_str = re.sub(r'\s*\.\s+','',input_str)
+    input_str = re.sub(r'\<([^\s])+\s+.*\>([^\<])?\<\1\>', '', input_str)
+    input_str = re.sub(r'https\:\/\/[^\s]', '', input_str)
+    input_str = re.sub(r"[^a-z0-9\s]", '', input_str)
+    input_str = re.sub(r'\s*\.\s+', '', input_str)
     return input_str
 
 
@@ -125,11 +125,14 @@ def remove_stopwords(tokens: str,
     stopped = [t for t in tokens if t not in stopwords]
     return ' '.join(stopped)
 
-def remove_links_and_html(input_str:str)->str:
-    input_str = re.sub(r'\s+http(s)?://([^\s])+','',input_str)
-    input_str = re.sub(r'<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});','',input_str)
-    input_str = re.sub(r'/',' ',input_str)
-    return re.sub(r'\[([^\]]+)\]\(.*\)',r'\1',input_str)
+
+def remove_links_and_html(input_str: str) -> str:
+    input_str = re.sub(
+        r'<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});', '', input_str)
+    input_str = re.sub(r'\s*http(s)?://([^\s])+', '', input_str)
+    input_str = re.sub(r'/', ' ', input_str)
+    return re.sub(r'\[([^\]]+)\]\(.*\)', r'\1', input_str)
+
 
 def squeaky_clean(input_str: str, extra_words: List[str] = [],
                   exclude_words: List[str] = []) -> str:
@@ -215,14 +218,14 @@ def series_generator(df: pd.DataFrame) -> Tuple[str, str, str, str,
     java_words_series = series_dict['Java']
     all_words_series = series_dict['All']
 
-    # returned in order of: javascript_series, python_series, type_series, go_series, java_series,unlisted, other, all_words_series 
+    # returned in order of: javascript_series, python_series, type_series, go_series, java_series,unlisted, other, all_words_series
     return (javascript_words_series, python_words_series,
             typescript_words_series, go_words_series,
             java_words_series, language_not_listed_series, other_series,
             all_words_series)
 
 
-def generate_series(content: pd.Series, separator: Union[pd.Series,None] = None) -> Union[Dict[str, str],str]:
+def generate_series(content: pd.Series, separator: Union[pd.Series, None] = None) -> Union[Dict[str, str], str]:
     # TODO Docstring
     ret_dict = {}
     if separator is None:

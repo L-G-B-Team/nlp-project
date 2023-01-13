@@ -156,11 +156,11 @@ def top_ngrams_by_group(df: pd.DataFrame, top_n: int = 10, n: int = 1,
     top_ten = pd.Series()
     if n > 1:
         top_ten = get_ngram_frequency(df[content], n)
-        top_ten = top_ten[top_ten.index.str.len() > 3][:10]
+        top_ten = top_ten[top_ten.index.str.len() > 3][:top_n]
     else:
         words = ' '.join(df[content].to_list())
         top_ten = pd.Series(words.split()).value_counts()
-        top_ten = top_ten[top_ten.index.str.len() > 3][:10]
+        top_ten = top_ten[top_ten.index.str.len() > 3][:top_n]
     percentage_lst = []
     for s in df[separator].unique():
         ser = pd.Series(name=s)
