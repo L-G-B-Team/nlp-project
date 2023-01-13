@@ -91,15 +91,15 @@ def tune_random_forest(features: pd.DataFrame, target: pd.Series,
     return pd.DataFrame(ret_ser)
 
 
-def scale(features: pd.Series, target:pd.Series,scaler: MinMaxScaler) -> pd.Series:
+def scale(features: pd.Series, target: pd.Series, scaler: MinMaxScaler) -> pd.Series:
     indexes = features.index
-    features = features.values.reshape(-1,1)
+    features = features.values.reshape(-1, 1)
     try:
         ret_series = scaler.transform(features)
     except NotFittedError as e:
         scaler = scaler.fit(features)
         ret_series = scaler.transform(features)
-    return pd.DataFrame(ret_series,index=indexes,columns=['scaled_lemmatized_length'])
+    return pd.DataFrame(ret_series, index=indexes, columns=['scaled_lemmatized_length'])
 
 
 def encode_has_language(df):
@@ -115,8 +115,9 @@ def encode_has_language(df):
     ret_df['has_react'] = df.repo.str.contains('react')
     ret_df['has_go'] = df.repo.str.contains('go')
     ret_df.index = df.index
-    
+
     return ret_df
+
 
 def encode_for_model(train, validate, test):
     '''
@@ -126,3 +127,5 @@ def encode_for_model(train, validate, test):
     validate = encode_has_language(validate)
     test = encode_has_language(test)
     return train, validate, test
+
+# TODO XG BOOST
