@@ -5,6 +5,7 @@ import nltk
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from scipy import stats
 from IPython.display import Markdown as md
 from wordcloud import WordCloud
 
@@ -188,6 +189,13 @@ def language_distribution(df):
     ax = plt.subplot(111)
     sns.countplot(data=df, x='language', ax=ax, palette='colorblind', order=lang_order)
     plt.show()
+
+def language_name_chi2(df, lang):
+    series = df.language == lang
+    has_word = df.lemmatized.str.contains(lang.lower())
+    ctab = pd.crosstab(series, has_word)
+    stat, p, degf, expected = stats.chi2_contingency(ctab)
+    return p_to_md(p)
     
 def language_name_percentage_plot(df):
     #split into a df per language category
@@ -229,3 +237,23 @@ def language_name_percentage_plot(df):
     ax.set_xlim(0,1)
     ax.set_xticks([0,.5,1],['0%','50%','100%'])
     plt.show()
+
+def readme_len_plot(df):
+    fig = plt.figure(figsize=(20, 10))
+    ax = plt.subplot(111)
+    sns.barplot(x="language", y="lemmatized_len", data=df, palette='colorblind', ax=ax, order=lang_order)
+    plt.show()
+    
+def readme_len_kruskal(df):
+    #split into a df per language category
+    go, java, javascript, not_listed, other, python, typescript = split_by_language(df)
+    
+    stat, p = stats.kruskal(go.lemmatized_len, java.lemmatized_len, javascript.lemmatized_len, not_listed.lemmatized_len, other.lemmatized_len, python.lemmatized_len, typescript.lemmatized_len)
+    return p_to_md(p)
+
+def title_chi2(df, word):
+    lang = df.language
+    has_word = df.repo.str.contains(word)
+    ctab = pd.crosstab(lang, has_word)
+    stat, p, degf, expected = stats.chi2_contingency(ctab)
+    return p_to_md(p)
