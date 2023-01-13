@@ -270,3 +270,20 @@ def get_idf(df):
         zip(
             tfidf.get_feature_names_out(), tfidf.idf_)))
     return idf_values.describe()
+
+def percentage_of_language_per_word():
+    df = pd.DataFrame({'word': ['React', 'Awesome', 'Go'],
+                            'Other': [7, 14, 33],
+                            'Go': [0, 0, 67],
+                            'JavaScript': [50, 7, 0],
+                            'TypeScript': [43, 0, 0],
+                            'NotListed': [0, 79, 0]})
+    df.plot(
+    x = 'word',
+    kind = 'barh',
+    stacked = True,
+    title = 'Stacked Bar Graph',
+    mark_right = True)
+
+    
+    return(df)
