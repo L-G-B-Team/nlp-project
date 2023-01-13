@@ -98,3 +98,27 @@ def scale(features: pd.DataFrame, scaler: MinMaxScaler) -> pd.DataFrame:
     except NotFittedError:
         ret_df = pd.DataFrame(scaler.fit_transform(features))
     return ret_df
+
+
+def encode_has_language(df):
+    '''
+    Takes in df and returns it with added features
+    '''
+    df['has_java'] = df.lemmatized.str.contains('java')
+    df['has_javascript'] = df.lemmatized.str.contains('javascript')
+    df['has_python'] = df.lemmatized.str.contains('python')
+    df['has_typescript'] = df.lemmatized.str.contains('typescript')
+    df['has_awesome'] = df.repo.str.contains('awesome')
+    df['has_react'] = df.repo.str.contains('react')
+    df['has_go'] = df.repo.str.contains('go')
+    
+    return df
+
+def encode_for_model(train, validate, test):
+    '''
+    Takes in train, validate, test and adds the added features for all of them
+    '''
+    train = encode_has_language(train)
+    validate = encode_has_language(validate)
+    test = encode_has_language(test)
+    return train, validate, test
