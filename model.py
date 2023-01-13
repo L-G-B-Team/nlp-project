@@ -81,7 +81,7 @@ def tune_random_forest(features: pd.DataFrame, target: pd.Series,
                           min_samples_leaf[1],
                           min_samples_leaf[2]):
             model = RandomForestClassifier(
-                max_depth=depth, min_samples_leaf=leaf)
+                max_depth=depth, min_samples_leaf=leaf,random_state=27)
             yhat = model_data(model, features, target,
                               result_suffix='min_samples_leaf_' + str(leaf))
             ret_sub_ser[yhat.name] = accuracy_score(target.to_numpy(),
