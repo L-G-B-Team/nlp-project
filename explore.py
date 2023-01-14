@@ -286,18 +286,21 @@ def get_idf(df):
     return idf_values.describe()
 
 
-def percentage_of_language_per_word():
-    df = pd.DataFrame({'word': ['React', 'Awesome', 'Go'],
-                       'Other': [7, 14, 33],
-                       'Go': [0, 0, 67],
-                       'JavaScript': [50, 7, 0],
-                       'TypeScript': [43, 0, 0],
-                       'NotListed': [0, 79, 0]})
-    df.plot(
-        x='word',
-        kind='barh',
-        stacked=True,
-        title='Stacked Bar Graph',
-        mark_right=True)
+def percentage_of_language_per_word(df):
+    go, java, javascript, not_listed, other, python, typescript = split_by_language(df)
+    javascript_title_freq = get_ngram_frequency(javascript.repo)
+    python_title_freq = get_ngram_frequency(python.repo)
+    typescript_title_freq = get_ngram_frequency(typescript.repo)
+    go_title_freq = get_ngram_frequency(go.repo)
+    other_series_freq = get_ngram_frequency(other.repo)
+    not_listed_freq = get_ngram_frequency(not_listed.repo)
+    java_title_freq = get_ngram_frequency(java.repo)
+    all_title_freq = get_ngram_frequency(df.repo)
 
-    return(df)
+    title_word_counts = (pd.concat([all_title_freq, javascript_title_freq,typescript_title_freq,go_title_freq, python_title_freq, java_title_freq, other_series_freq, not_listed_freq], axis=1, sort=True)
+                    .set_axis(['all', 'javascript','typescript','go', 'python', 'java','other','not_listed'], axis=1, inplace=False)
+                    .fillna(0)
+                    .apply(lambda s: s.astype(int)))
+    title_word_counts_limited = title_word_counts[(title_word_counts.index=='awesome') | (title_word_counts.index=='react') | (title_word_counts.index=='go')]
+
+    return title_word_counts_limited
