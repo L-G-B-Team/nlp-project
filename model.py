@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 from typing import Union, Tuple
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -19,7 +21,7 @@ def model_data(model: ModelType, features: pd.DataFrame, target: Union[pd.Series
     # TODO Docstring
     y_hat = pd.Series()
     try:
-        #gets predictions if model has been fitted
+        # gets predictions if model has been fitted
         y_hat = pd.Series(model.predict(features))
     # if model is not fitted, fits model and returns predictions
     except NotFittedError:
@@ -28,14 +30,15 @@ def model_data(model: ModelType, features: pd.DataFrame, target: Union[pd.Series
         model.fit(features, target)
         y_hat = pd.Series(model.predict(features))
     y_hat.name = (result_suffix if len(result_suffix) > 0 else '')
-    #changes indexes to match that of target
+    # changes indexes to match that of target
     y_hat.index = target.index
     return y_hat
 
 
-def tune_decision_tree(features: pd.DataFrame, target: pd.Series,
+def tune_decision_tree(train_features: pd.DataFrame, train_target: pd.Series,
+                       valid_features: pd.DataFrame, valid_target: pd.Series,
                        max_depth: Tuple[int, int, int] = (2, 31, 1),
-                       model: DecisionTreeClassifier = DecisionTreeClassifier(),
+
                        metric: callable = accuracy_score):
     '''
 
@@ -49,19 +52,26 @@ def tune_decision_tree(features: pd.DataFrame, target: pd.Series,
     ## Returns
     a `Series` containing the metric scores at each max_depth
     '''
-    ret_lst = {}
+    train_lst = {}
+    valid_lst = {}
     for depth in range(max_depth[0], max_depth[1], max_depth[2]):
         model = RandomForestClassifier(max_depth=depth, random_state=27)
-        yhat = model_data(model, features, target, 'max_depth_'+str(depth))
-        ret_lst[yhat.name] = metric(target.to_numpy(), yhat.to_numpy())
-    return pd.Series(ret_lst, name='Decision Tree')
+        train_yhat = model_data(model, train_features,
+                                train_target, str(depth))
+        valid_yhat = model_data(model, valid_features,
+                                valid_target, str(depth))
+        train_lst[train_yhat.name] = metric(
+            train_target.to_numpy(), train_yhat.to_numpy())
+        valid_lst[valid_yhat.name] = metric(
+            valid_target.to_numpy(), valid_yhat.to_numpy())
+    return pd.Series(train_lst, name='Train Data'), pd.Series(valid_lst, name='Valid Data')
 
 
 def tune_random_forest(
         train_features: pd.DataFrame,
         train_target: pd.DataFrame,
         valid_features: pd.DataFrame, valid_target: pd.Series,
-        max_depth: Tuple[int, int, int] = (2,21,1),
+        max_depth: Tuple[int, int, int] = (2, 21, 1),
         min_samples_leaf: Tuple[int, int, int] = (2, 31, 1),
         metric: callable = accuracy_score) -> Tuple[pd.DataFrame, pd.DataFrame]:
     '''
@@ -96,10 +106,10 @@ def tune_random_forest(
                                     result_suffix='min_samples_leaf_' + str(leaf))
             valid_yhat = model_data(model, valid_features, valid_target,
                                     result_suffix='min_samples_leaf_' + str(leaf))
-            train_sub_ser[train_yhat.name] = accuracy_score(train_target.to_numpy(),
-                                                            train_yhat.to_numpy())
-            valid_sub_ser[valid_yhat.name] = accuracy_score(valid_target.to_numpy(),
-                                                            valid_yhat.to_numpy())
+            train_sub_ser[train_yhat.name] = metric(train_target.to_numpy(),
+                                                    train_yhat.to_numpy())
+            valid_sub_ser[valid_yhat.name] = metric(valid_target.to_numpy(),
+                                                    valid_yhat.to_numpy())
         train_ser['n_estimators_' + str(depth)] = train_sub_ser
         valid_ser['n_estimators_' + str(depth)] = valid_sub_ser
     return (pd.DataFrame(train_ser),
@@ -150,7 +160,7 @@ def tune_gradient_boost(
         train_features: pd.DataFrame,
         train_target: pd.DataFrame,
         valid_features: pd.DataFrame, valid_target: pd.Series,
-        max_depth: Tuple[int, int, int] = (2,21,1),
+        max_depth: Tuple[int, int, int] = (2, 21, 1),
         min_samples_leaf: Tuple[int, int, int] = (2, 31, 1),
         metric: callable = accuracy_score) -> Tuple[pd.DataFrame, pd.DataFrame]:
     '''
@@ -182,14 +192,62 @@ def tune_gradient_boost(
             model = GradientBoostingClassifier(
                 n_estimators=100, max_depth=depth, min_samples_leaf=leaf)
             train_yhat = model_data(model, train_features, train_target,
-                                    result_suffix='min_samples_leaf_' + str(leaf))
+                                    result_suffix=str(leaf))
             valid_yhat = model_data(model, valid_features, valid_target,
-                                    result_suffix='min_samples_leaf_' + str(leaf))
-            train_sub_ser[train_yhat.name] = accuracy_score(train_target.to_numpy(),
-                                                            train_yhat.to_numpy())
-            valid_sub_ser[valid_yhat.name] = accuracy_score(valid_target.to_numpy(),
-                                                            valid_yhat.to_numpy())
-        train_ser['n_estimators_' + str(depth)] = train_sub_ser
-        valid_ser['n_estimators_' + str(depth)] = valid_sub_ser
+                                    result_suffix=str(leaf))
+            train_sub_ser[train_yhat.name] = metric(train_target.to_numpy(),
+                                                    train_yhat.to_numpy())
+            valid_sub_ser[valid_yhat.name] = metric(valid_target.to_numpy(),
+                                                    valid_yhat.to_numpy())
+        train_ser[str(depth)] = train_sub_ser
+        valid_ser[str(depth)] = valid_sub_ser
     return (pd.DataFrame(train_ser),
             pd.DataFrame(valid_ser))
+
+
+def assess_model_performance(train: pd.DataFrame, validate: pd.DataFrame) -> plt.Axes:
+    # TODO doctring
+
+    # encode_has_language
+    train_x = encode_has_language(train)
+    valid_x = encode_has_language(validate)
+    # scale lemmatized_len
+    scaler = MinMaxScaler()
+    scaled_valid = scale(validate.lemmatized_len, scaler)
+    scaled_train = scale(train.lemmatized_len, scaler)
+    # concat scaled_train and encoded_has_language
+    train_x = pd.concat([scaled_train, train_x], axis=1)
+    train_y = train.language
+    valid_x = pd.concat([scaled_valid, valid_x], axis=1)
+    valid_y = validate.language
+    rf_train, rf_valid = tune_random_forest(
+        train_x, train_y, valid_x, valid_y, max_depth=(2, 31, 1))
+    xg_train, xg_valid = tune_gradient_boost(
+        train_x, train_y, valid_x, valid_y)
+    dt_train, dt_valid = tune_decision_tree(train_x, train_y, valid_x, valid_y)
+    fig, axs = plt.subplots(3, 2, sharex='col')
+    sns.barplot(data=dt_train, ax=axs[0][0])
+    axs[0][0].set_xlabel('max_depth')
+    axs[0][0].set_ylabel('Accuracy')
+    axs[0, 0].set_title('In Sample Data')
+    sns.barplot(data=dt_valid, ax=axs[0][1])
+    axs[0][1].set_xlabel('max_depth')
+    axs[0][1].set_ylabel('Accuracy')
+    axs[0, 1].set_title('Out of Sample Data')
+    sns.heatmap(rf_train, ax=axs[1][0])
+    axs[1, 0].set_xlabel('max_depth')
+    axs[1, 0].set_ylabel('min_samples_leaf')
+    axs[1, 0].set_title('In Sample Data')
+    sns.heatmap(rf_valid, ax=axs[1, 1])
+    axs[1, 1].set_xlabel('max_depth')
+    axs[1, 1].set_ylabel('min_samples_leaf')
+    axs[1, 1].set_title('Out of Sample Data')
+    sns.heatmap(xg_train, ax=axs[2, 0])
+    axs[2, 0].set_xlabel('max_depth')
+    axs[2, 0].set_ylabel('min_samples_leaf')
+    axs[2, 0].set_title('In Sample Data')
+    sns.heatmap(xg_valid, ax=axs[2, 1])
+    axs[2, 1].set_xlabel('max_depth')
+    axs[2, 1].set_ylabel('min_samples_leaf')
+    axs[2, 1].set_title('Out of Sample Data')
+    plt.show()
