@@ -23,9 +23,9 @@ My initial hypothesis is that repos that contain the name of a programming langu
 * Explore data in search of indicators (words/ word combinations) of main programming language
     * Answer the following initial questions
         * Does the name of the programming language appearing in the README indicate the main programming language?
-        * Does the frequency of a certain word indicate the main programming language?
+        * Does the frequency of a certain word within a README indicate the main programming language?
         * Does the length of the README indicate the main programming language?
-        * Does the repo title indicate the main programming language?
+        * Does a certain word appearing in the repo title indicate the main programming language?
 
 * Develop a model to predict the main programming language of a repository
     * Use indicators identified through exploration to build different predictive models
@@ -38,13 +38,10 @@ My initial hypothesis is that repos that contain the name of a programming langu
 ## Data dictionary
 | Feature | Definition | Type |
 |:--------|:-----------|:-------
-|**repo_title**| Name of the repository on GitHub| *string*|
+|**repo**| Name of the repository on GitHub| *string*|
 |**word_freq**| Number of times a word appears across all README| *float*|
-|**readme_len**| Number of characters in| *int*|
-|**???**| Definition| *type*|
-|**???**| Definition| *type*|
-|**???**| Definition| *type*|
-|**???**| Definition| *type*|
+|**lemmatized_len**| Number of characters in| *int*|
+|**username**| Username of GitHub user| *string*|
 |**Target variable**
 |**language**| Primary programming language used in the repository | *string* |
 
@@ -55,8 +52,9 @@ My initial hypothesis is that repos that contain the name of a programming langu
 3. Run notebook.
 
 ## Takeaways and Conclusions
-* 
-* 
+* The name of the language appearing in the README of that languge shows significance.
+* The length of the README seems to be an indicator of a README's primary language
+* The words 'awesome','react', and 'go' appearing in the repo title seem to be indicators of a README's primary language
 
 ## Recommendations
 * :
@@ -66,5 +64,5 @@ My initial hypothesis is that repos that contain the name of a programming langu
 
 ## Next Steps
 * In the next iteration:
-    * 
-    * 
+    * Collect more READMEs to help improve what we base our model on.
+    * Continue exploration of tf and idf as features to improve our model.
