@@ -5,32 +5,37 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.tree import DecisionTreeClassifier, plot_tree
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score
 
 ModelType = Union[LogisticRegression, DecisionTreeClassifier,
-                  RandomForestClassifier, KNeighborsClassifier]
+                  RandomForestClassifier, KNeighborsClassifier,
+                  GradientBoostingClassifier]
 
 
 def model_data(model: ModelType, features: pd.DataFrame, target: Union[pd.Series, None] = None, result_suffix: str = '') -> pd.DataFrame:
     # TODO Docstring
     y_hat = pd.Series()
     try:
+        #gets predictions if model has been fitted
         y_hat = pd.Series(model.predict(features))
+    # if model is not fitted, fits model and returns predictions
     except NotFittedError:
         if target is None:
             raise NotFittedError('Model not fit and target not provided')
         model.fit(features, target)
         y_hat = pd.Series(model.predict(features))
     y_hat.name = (result_suffix if len(result_suffix) > 0 else '')
+    #changes indexes to match that of target
     y_hat.index = target.index
     return y_hat
 
 
 def tune_decision_tree(features: pd.DataFrame, target: pd.Series,
                        max_depth: Tuple[int, int, int] = (2, 31, 1),
+                       model: DecisionTreeClassifier = DecisionTreeClassifier(),
                        metric: callable = accuracy_score):
     '''
 
@@ -52,10 +57,13 @@ def tune_decision_tree(features: pd.DataFrame, target: pd.Series,
     return pd.Series(ret_lst, name='Decision Tree')
 
 
-def tune_random_forest(features: pd.DataFrame, target: pd.Series,
-                       max_depth: Tuple[int, int, int] = (2, 31, 1),
-                       min_samples_leaf: Tuple[int, int, int] = (2, 31, 1),
-                       metric: callable = accuracy_score) -> pd.Series:
+def tune_random_forest(
+        train_features: pd.DataFrame,
+        train_target: pd.DataFrame,
+        valid_features: pd.DataFrame, valid_target: pd.Series,
+        max_depth: Tuple[int, int, int] = (2,21,1),
+        min_samples_leaf: Tuple[int, int, int] = (2, 31, 1),
+        metric: callable = accuracy_score) -> Tuple[pd.DataFrame, pd.DataFrame]:
     '''
     Runs multiple versions of RandomForestClassifier
     with different hyperparameters to determine the most effective
@@ -74,24 +82,31 @@ def tune_random_forest(features: pd.DataFrame, target: pd.Series,
     ## Returns
     a `DataFrame` with the metric scores at each max_depth and min_samples_leaf
     '''
-    ret_ser = {}
+    train_ser = {}
+    valid_ser = {}
     for depth in range(max_depth[0], max_depth[1], max_depth[2]):
-        ret_sub_ser = {}
-
+        train_sub_ser = {}
+        valid_sub_ser = {}
         for leaf in range(min_samples_leaf[0],
                           min_samples_leaf[1],
                           min_samples_leaf[2]):
             model = RandomForestClassifier(
-                max_depth=depth, min_samples_leaf=leaf, random_state=69)
-            yhat = model_data(model, features, target,
-                              result_suffix='min_samples_leaf_' + str(leaf))
-            ret_sub_ser[yhat.name] = accuracy_score(target.to_numpy(),
-                                                    yhat.to_numpy())
-        ret_ser['max_depth_' + str(depth)] = ret_sub_ser
-    return pd.DataFrame(ret_ser)
+                n_estimators=180, max_depth=depth, min_samples_leaf=leaf)
+            train_yhat = model_data(model, train_features, train_target,
+                                    result_suffix='min_samples_leaf_' + str(leaf))
+            valid_yhat = model_data(model, valid_features, valid_target,
+                                    result_suffix='min_samples_leaf_' + str(leaf))
+            train_sub_ser[train_yhat.name] = accuracy_score(train_target.to_numpy(),
+                                                            train_yhat.to_numpy())
+            valid_sub_ser[valid_yhat.name] = accuracy_score(valid_target.to_numpy(),
+                                                            valid_yhat.to_numpy())
+        train_ser['n_estimators_' + str(depth)] = train_sub_ser
+        valid_ser['n_estimators_' + str(depth)] = valid_sub_ser
+    return (pd.DataFrame(train_ser),
+            pd.DataFrame(valid_ser))
 
 
-def scale(features: pd.Series, target: pd.Series, scaler: MinMaxScaler) -> pd.Series:
+def scale(features: pd.Series, scaler: MinMaxScaler) -> pd.Series:
     indexes = features.index
     features = features.values.reshape(-1, 1)
     try:
@@ -129,3 +144,52 @@ def encode_for_model(train, validate, test):
     return train, validate, test
 
 # TODO XG BOOST
+
+
+def tune_gradient_boost(
+        train_features: pd.DataFrame,
+        train_target: pd.DataFrame,
+        valid_features: pd.DataFrame, valid_target: pd.Series,
+        max_depth: Tuple[int, int, int] = (2,21,1),
+        min_samples_leaf: Tuple[int, int, int] = (2, 31, 1),
+        metric: callable = accuracy_score) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    '''
+    Runs multiple versions of GradientBoostingClassifier
+    with different hyperparameters to determine the most effective
+    parameters for modeling.
+    ## Parameters
+    features: `DataFrame` of features to model on
+    target: `Series` of target variable
+    max_depth: a tuple representing, in order, the minimum value for max_depth,
+    the maximum value for max_depth, and the number of steps between.
+    These function as parameters for a range
+    min_samples_leaf: a tuple of integers representing, in order,
+    the minimum value for min_samples_leaf,
+    the maximum value for min_samples_leaf, and the number of steps between.
+    These are used as parameters for a range
+    metric: a function for the metric used to evaluate the inputs
+    ## Returns
+    a `DataFrame` with the metric scores at each max_depth and min_samples_leaf
+    '''
+    train_ser = {}
+    valid_ser = {}
+    for depth in range(max_depth[0], max_depth[1], max_depth[2]):
+        train_sub_ser = {}
+        valid_sub_ser = {}
+        for leaf in range(min_samples_leaf[0],
+                          min_samples_leaf[1],
+                          min_samples_leaf[2]):
+            model = GradientBoostingClassifier(
+                n_estimators=100, max_depth=depth, min_samples_leaf=leaf)
+            train_yhat = model_data(model, train_features, train_target,
+                                    result_suffix='min_samples_leaf_' + str(leaf))
+            valid_yhat = model_data(model, valid_features, valid_target,
+                                    result_suffix='min_samples_leaf_' + str(leaf))
+            train_sub_ser[train_yhat.name] = accuracy_score(train_target.to_numpy(),
+                                                            train_yhat.to_numpy())
+            valid_sub_ser[valid_yhat.name] = accuracy_score(valid_target.to_numpy(),
+                                                            valid_yhat.to_numpy())
+        train_ser['n_estimators_' + str(depth)] = train_sub_ser
+        valid_ser['n_estimators_' + str(depth)] = valid_sub_ser
+    return (pd.DataFrame(train_ser),
+            pd.DataFrame(valid_ser))
