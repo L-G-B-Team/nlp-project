@@ -191,6 +191,7 @@ def prep_df_for_nlp(df: pd.DataFrame, series_to_prep: str,
     split_series = df.repo.apply(lambda s: s.split('/'))
     df['username'] = split_series.apply(lambda arr: arr[0])
     df.repo = split_series.apply(lambda arr: arr[1])
+    df.repo = df.repo.apply(lambda s: s.replace('-', ' '))
     # changes language to category
     df.language = df.language.astype('category')
     # add character length of lemmatized content
