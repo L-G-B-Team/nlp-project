@@ -249,7 +249,7 @@ def model_and_evaluate(features: pd.DataFrame, target: pd.Series, model: ModelTy
 def create_models()->Tuple[GradientBoostingClassifier,RandomForestClassifier,DecisionTreeClassifier]:
     xg_boost = GradientBoostingClassifier(n_estimators=180,min_samples_leaf=XG_MIN_SAMPLES_LEAF,max_depth=XG_MAX_DEPTH,random_state=27)
     random_forest = RandomForestClassifier(n_estimators=180,min_samples_leaf=RF_MIN_SAMPLES_LEAF,max_depth=RF_MAX_DEPTH,random_state=27)
-    decision_tree = DecisionTreeClassifier(max_depth=DT_MAX_DEPTH,random_state=278)
+    decision_tree = DecisionTreeClassifier(max_depth=DT_MAX_DEPTH,random_state=27)
     return xg_boost, random_forest, decision_tree
 def compare_models(train_x: pd.DataFrame, train_y: pd.Series, valid_x: pd.DataFrame, valid_y: pd.Series, decision_tree: DecisionTreeClassifier,
                    random_forest: RandomForestClassifier, xg_boost: GradientBoostingClassifier) -> pd.DataFrame:
