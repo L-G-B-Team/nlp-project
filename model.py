@@ -312,3 +312,10 @@ def run_test(test_x:pd.DataFrame,test_y:pd.Series,model:ModelType)->ConfusionMat
     yhat_test = model_data(model,test_x)
     plt.tight_layout()
     return ConfusionMatrixDisplay.from_predictions(test_y,yhat_test,xticks_rotation='vertical')
+
+
+def tf_idf(documents:pd.Series)->pd.DataFrame:
+    # TODO Docstring
+    tfidf = TfidfVectorizer()
+    tfidf_docs = tfidf.fit_transform(documents.values)
+    return tfidf_docs
