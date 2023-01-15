@@ -15,7 +15,11 @@ from sklearn.metrics import ConfusionMatrixDisplay
 ModelType = Union[LogisticRegression, DecisionTreeClassifier,
                   RandomForestClassifier, KNeighborsClassifier,
                   GradientBoostingClassifier]
-
+DT_MAX_DEPTH = 22
+RF_MAX_DEPTH = 23
+RF_MIN_SAMPLES_LEAF = 2
+XG_MIN_SAMPLES_LEAF = 9
+XG_MAX_DEPTH = 9
 
 def model_data(model: ModelType, features: pd.DataFrame, target: Union[pd.Series, None] = None, result_suffix: str = '') -> pd.DataFrame:
     # TODO Docstring
@@ -242,7 +246,11 @@ def model_and_evaluate(features: pd.DataFrame, target: pd.Series, model: ModelTy
     yhat = model_data(model, features, target)
     return accuracy_score(target, yhat)
 
-
+def create_models()->Tuple[GradientBoostingClassifier,RandomForestClassifier,DecisionTreeClassifier]:
+    xg_boost = GradientBoostingClassifier(n_estimators=180,min_samples_leaf=XG_MIN_SAMPLES_LEAF,max_depth=XG_MAX_DEPTH,random_state=27)
+    random_forest = RandomForestClassifier(n_estimators=180,min_samples_leaf=RF_MIN_SAMPLES_LEAF,max_depth=RF_MAX_DEPTH,random_state=27)
+    decision_tree = DecisionTreeClassifier(max_depth=DT_MAX_DEPTH,random_state=278)
+    return xg_boost, random_forest, decision_tree
 def compare_models(train_x: pd.DataFrame, train_y: pd.Series, valid_x: pd.DataFrame, valid_y: pd.Series, decision_tree: DecisionTreeClassifier,
                    random_forest: RandomForestClassifier, xg_boost: GradientBoostingClassifier) -> pd.DataFrame:
     # TODO Docstring
