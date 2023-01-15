@@ -22,7 +22,14 @@ XG_MIN_SAMPLES_LEAF = 9
 XG_MAX_DEPTH = 9
 
 def model_data(model: ModelType, features: pd.DataFrame, target: Union[pd.Series, None] = None, result_suffix: str = '') -> pd.DataFrame:
-    # TODO Docstring
+    '''
+    Fits (if applicable) and runs predictions on given model.
+    ## Parameters
+    model: a `DecisionTreeClassifier`, `RandomForestClassifier`,
+    or `GradientBoostingClassifier` to be modeled on (note)
+    ## Returns
+    
+    '''
     y_hat = pd.Series()
     try:
         # gets predictions if model has been fitted
