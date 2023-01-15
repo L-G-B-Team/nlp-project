@@ -201,6 +201,7 @@ def language_name_chi2(df, lang):
     has_word = df.lemmatized.str.contains(lang.lower())
     ctab = pd.crosstab(series, has_word)
     stat, p, degf, expected = stats.chi2_contingency(ctab)
+    print(f'Chi^2 Stat:{stat}\np-value: {p}')
     return p_to_md(p)
 
 
@@ -271,6 +272,7 @@ def title_chi2(df, word):
     has_word = df.repo.str.contains(word)
     ctab = pd.crosstab(lang, has_word)
     stat, p, degf, expected = stats.chi2_contingency(ctab)
+    print(f'Chi^2 Stat:{stat}\np-value: {p}')
     return p_to_md(p)
 
 
