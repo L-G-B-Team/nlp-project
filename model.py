@@ -13,7 +13,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import ConfusionMatrixDisplay
 
 ModelType = Union[LogisticRegression, DecisionTreeClassifier,
-                  RandomForestClassifier, KNeighborsClassifier,
+                  RandomForestClassifier,
                   GradientBoostingClassifier]
 DT_MAX_DEPTH = 22
 RF_MAX_DEPTH = 23
