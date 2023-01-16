@@ -216,20 +216,26 @@ def tune_gradient_boost(
 
 def get_features_and_target(train: pd.DataFrame, validate: pd.DataFrame, test: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
     # encode_has_language
-    train_x = encode_has_language(train)
-    valid_x = encode_has_language(validate)
-    test_x = encode_has_language(test)
+    training_x = encode_has_language(train)
+    validate_x = encode_has_language(validate)
+    testing_x = encode_has_language(test)
     # scale lemmatized_len
     scaler = MinMaxScaler()
     scaled_valid = scale(validate.lemmatized_len, scaler)
     scaled_train = scale(train.lemmatized_len, scaler)
     scaled_test = scale(test.lemmatized_len, scaler)
-    # concat scaled_train and encoded_has_language
-    train_x = pd.concat([scaled_train, train_x], axis=1)
+    #get TFIDF
+    tfidf = TfidfVectorizer(ngram_range=(1,2))
+    train_tfidf = tf_idf(train.lemmatized,tfidf)
+    valid_tfidf = tf_idf(validate.lemmatized,tfidf)
+    test_tfidf = tf_idf(test.lemmatized,tfidf)
+    # concat scaled_train,tfidf, and encoded_has_language
+    train_x = pd.concat([train_tfidf,scaled_train],axis=1)
+    train_x = pd.concat([train_x,training_x],axis=1)
     train_y = train.language
-    valid_x = pd.concat([scaled_valid, valid_x], axis=1)
+    valid_x = pd.concat([valid_tfidf,scaled_valid, validate_x], axis=1)
     valid_y = validate.language
-    test_x = pd.concat([scaled_test, test_x], axis=1)
+    test_x = pd.concat([test_tfidf,scaled_test, testing_x], axis=1)
     test_y = test.language
     return train_x, train_y, valid_x, valid_y,test_x,test_y
 
@@ -237,8 +243,8 @@ def get_features_and_target(train: pd.DataFrame, validate: pd.DataFrame, test: p
 def tune_hypers(train: pd.DataFrame, validate: pd.DataFrame) -> plt.Axes:
     # TODO doctring
     # get X and y values:
-    train_x, train_y, valid_x, valid_y = get_features_and_target(
-        train, validate)
+    train_x, train_y, valid_x, valid_y,_,_ = get_features_and_target(
+        train, validate,train)
     return_dct = {}
     return_dct['rf_train'], return_dct['rf_valid'] = tune_random_forest(
         train_x, train_y, valid_x, valid_y, max_depth=(2, 31, 1))
@@ -254,22 +260,30 @@ def model_and_evaluate(features: pd.DataFrame, target: pd.Series, model: ModelTy
     return accuracy_score(target, yhat)
 
 def create_models()->Tuple[GradientBoostingClassifier,RandomForestClassifier,DecisionTreeClassifier]:
-    xg_boost = GradientBoostingClassifier(n_estimators=180,min_samples_leaf=XG_MIN_SAMPLES_LEAF,max_depth=XG_MAX_DEPTH,random_state=27)
+    xg_boost = GradientBoostingClassifier(min_samples_leaf=XG_MIN_SAMPLES_LEAF,max_depth=XG_MAX_DEPTH,random_state=27)
     random_forest = RandomForestClassifier(n_estimators=180,min_samples_leaf=RF_MIN_SAMPLES_LEAF,max_depth=RF_MAX_DEPTH,random_state=27)
     decision_tree = DecisionTreeClassifier(max_depth=DT_MAX_DEPTH,random_state=27)
     return xg_boost, random_forest, decision_tree
+
+
 def compare_models(train_x: pd.DataFrame, train_y: pd.Series, valid_x: pd.DataFrame, valid_y: pd.Series, decision_tree: DecisionTreeClassifier,
                    random_forest: RandomForestClassifier, xg_boost: GradientBoostingClassifier) -> pd.DataFrame:
     # TODO Docstring
     ret_dict = {}
     sub_dct = {}
+    print('running Decision Tree on train')
     sub_dct['Train'] = model_and_evaluate(train_x, train_y, decision_tree)
+    print('Running decision tree on validate')
     sub_dct['Validate'] = model_and_evaluate(valid_x, valid_y, decision_tree)
     ret_dict['Decision Tree'] = sub_dct.copy()
+    print('Running random forest on train')
     sub_dct['Train'] = model_and_evaluate(train_x, train_y, random_forest)
+    print('running random forest on validate')
     sub_dct['Validate'] = model_and_evaluate(valid_x, valid_y, random_forest)
     ret_dict['Random Forest'] = sub_dct.copy()
+    print('running xgboost on train')
     sub_dct['Train'] = model_and_evaluate(train_x, train_y, xg_boost)
+    print('running xgboost on validate')
     sub_dct['Validate'] = model_and_evaluate(valid_x, valid_y, xg_boost)
     ret_dict['Gradient Boosting'] = sub_dct
     return pd.DataFrame(ret_dict)
@@ -314,8 +328,11 @@ def run_test(test_x:pd.DataFrame,test_y:pd.Series,model:ModelType)->ConfusionMat
     return ConfusionMatrixDisplay.from_predictions(test_y,yhat_test,xticks_rotation='vertical')
 
 
-def tf_idf(documents:pd.Series)->pd.DataFrame:
+def tf_idf(documents:pd.Series,tfidf:TfidfVectorizer)->pd.DataFrame:
     # TODO Docstring
-    tfidf = TfidfVectorizer()
-    tfidf_docs = tfidf.fit_transform(documents.values)
-    return tfidf_docs
+    tfidf_docs = np.empty((0,5))
+    try:
+        tfidf_docs = tfidf.transform(documents.values)
+    except NotFittedError:
+        tfidf_docs = tfidf.fit_transform(documents.values)
+    return pd.DataFrame(tfidf_docs.todense(),index=documents.index,columns=tfidf.get_feature_names_out())
