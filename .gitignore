@@ -2,6 +2,6 @@ env.py
 .DS_Store
 .ipynb_checkpoints/
 __pycache__
-readmes.csv
+*readmes.csv
 *.txt
 throwaway.ipynb
