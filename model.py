@@ -129,6 +129,13 @@ def tune_random_forest(
 
 
 def scale(features: pd.Series, scaler: MinMaxScaler) -> pd.Series:
+    '''
+    Fits (if applicable), and scales data with
+    ## Parameters
+    
+    ## Returns
+    
+    '''
     indexes = features.index
     features = features.values.reshape(-1, 1)
     try:
@@ -216,6 +223,7 @@ def tune_gradient_boost(
 
 
 def get_features_and_target(train: pd.DataFrame, validate: pd.DataFrame, test: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
+    #TODO DOCSTRING
     # encode_has_language
     training_x = encode_has_language(train)
     validate_x = encode_has_language(validate)
@@ -272,19 +280,13 @@ def compare_models(train_x: pd.DataFrame, train_y: pd.Series, valid_x: pd.DataFr
     # TODO Docstring
     ret_dict = {}
     sub_dct = {}
-    print('running Decision Tree on train')
     sub_dct['Train'] = model_and_evaluate(train_x, train_y, decision_tree)
-    print('Running decision tree on validate')
     sub_dct['Validate'] = model_and_evaluate(valid_x, valid_y, decision_tree)
     ret_dict['Decision Tree'] = sub_dct.copy()
-    print('Running random forest on train')
     sub_dct['Train'] = model_and_evaluate(train_x, train_y, random_forest)
-    print('running random forest on validate')
     sub_dct['Validate'] = model_and_evaluate(valid_x, valid_y, random_forest)
     ret_dict['Random Forest'] = sub_dct.copy()
-    print('running xgboost on train')
     sub_dct['Train'] = model_and_evaluate(train_x, train_y, xg_boost)
-    print('running xgboost on validate')
     sub_dct['Validate'] = model_and_evaluate(valid_x, valid_y, xg_boost)
     ret_dict['Gradient Boosting'] = sub_dct
     return pd.DataFrame(ret_dict)
@@ -325,7 +327,7 @@ def plot_data(data: Dict[str, pd.DataFrame]) -> None:
 def run_test(test_x:pd.DataFrame,test_y:pd.Series,model:ModelType)->ConfusionMatrixDisplay:
     # TODO Docstring
     yhat_test = model_data(model,test_x)
-    plt.tight_layout()    acc_score = accuracy_score(test_y,yhat_test)
+    acc_score = accuracy_score(test_y,yhat_test)
     return md(f'## Accuracy Score: {acc_score}')
 
 

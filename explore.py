@@ -9,7 +9,6 @@ import seaborn as sns
 from IPython.display import Markdown as md
 from scipy import stats
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from wordcloud import WordCloud
 
 import prepare as p
 
@@ -104,20 +103,6 @@ def get_ngram_frequency(ser: Union[pd.Series, str], n: int = 1) -> pd.Series:
         ngrams = nltk.ngrams(words, n)
         words = [' '.join(n) for n in ngrams]
     return pd.Series(words).value_counts()
-
-
-def generate_word_cloud(ser: pd.Series, ngram: int = 1,
-                        ax: Union[plt.Axes, None] = None,
-                        **kwargs) -> Union[plt.Axes, None]:
-    # TODO Docstring
-    if ser.dtype != np.int64:
-        ser = get_ngram_frequency(ser, ngram)
-    wc = WordCloud(**kwargs).generate_from_frequencies(ser.to_dict())
-    if ax is not None:
-        ax.imshow(wc)
-        return ax
-    plt.imshow(wc)
-    plt.show()
 
 
 def get_word_frequency(readme: str) -> pd.Series:
@@ -289,7 +274,8 @@ def get_idf(df):
 
 
 def percentage_of_language_per_word(df):
-    go, java, javascript, not_listed, other, python, typescript = split_by_language(df)
+    go, java, javascript, not_listed, other, python, typescript = split_by_language(
+        df)
     javascript_title_freq = get_ngram_frequency(javascript.repo)
     python_title_freq = get_ngram_frequency(python.repo)
     typescript_title_freq = get_ngram_frequency(typescript.repo)
@@ -299,10 +285,20 @@ def percentage_of_language_per_word(df):
     java_title_freq = get_ngram_frequency(java.repo)
     all_title_freq = get_ngram_frequency(df.repo)
 
-    title_word_counts = (pd.concat([all_title_freq, javascript_title_freq,typescript_title_freq,go_title_freq, python_title_freq, java_title_freq, other_series_freq, not_listed_freq], axis=1, sort=True)
-                    .set_axis(['all', 'javascript','typescript','go', 'python', 'java','other','not_listed'], axis=1, inplace=False)
-                    .fillna(0)
-                    .apply(lambda s: s.astype(int)))
-    title_word_counts_limited = title_word_counts[(title_word_counts.index=='awesome') | (title_word_counts.index=='react') | (title_word_counts.index=='go')]
+    title_word_counts = (pd.concat([all_title_freq, javascript_title_freq, typescript_title_freq, go_title_freq, python_title_freq, java_title_freq, other_series_freq, not_listed_freq], axis=1, sort=True)
+                         .set_axis(['all', 'javascript', 'typescript', 'go', 'python', 'java', 'other', 'not_listed'], axis=1, inplace=False)
+                         .fillna(0)
+                         .apply(lambda s: s.astype(int)))
+    title_word_counts_limited = title_word_counts[(title_word_counts.index == 'awesome') | (
+        title_word_counts.index == 'react') | (title_word_counts.index == 'go')]
 
     return title_word_counts_limited
+
+
+def significant_words_graph(train: pd.DataFrame) -> None:
+    significant_words = ['awesome', 'go', 'react']
+    ret_df = pd.DataFrame()
+    for word in significant_words:
+        ret_df[word] = train.groupby('language').lemmatized.agg(
+            lambda l: l.str.contains(word).sum())
+    sns.barplot(data=ret_df,x=)
