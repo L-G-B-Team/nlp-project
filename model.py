@@ -327,8 +327,8 @@ def plot_data(data: Dict[str, pd.DataFrame]) -> None:
 def run_test(test_x:pd.DataFrame,test_y:pd.Series,model:ModelType)->ConfusionMatrixDisplay:
     # TODO Docstring
     yhat_test = model_data(model,test_x)
-    acc_score = accuracy_score(test_y,yhat_test)
-    return md(f'## Accuracy Score: {acc_score}')
+    acc_score = accuracy_score(test_y,yhat_test) * 100
+    return md(f'## Accuracy Score: {acc_score:1.2f}%')
 
 
 def tf_idf(documents:pd.Series,tfidf:TfidfVectorizer)->pd.DataFrame:

@@ -5,3 +5,4 @@ __pycache__
 *readmes.csv
 *.txt
 throwaway.ipynb
+data/*
