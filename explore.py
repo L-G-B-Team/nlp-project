@@ -125,7 +125,10 @@ def top_five_words(series: pd.Series) -> pd.DataFrame:
     return readme_counts
 
 
-def split_by_language(df):
+def split_by_language(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame,
+                                                 pd.DataFrame, pd.DataFrame,
+                                                 pd.DataFrame, pd.DataFrame,
+                                                 pd.DataFrame]:
     '''
     Takes in the dataframe and splits on the languages
     Returns seven dataframes, one per language
@@ -172,7 +175,7 @@ def word_heat_map(df: pd.DataFrame, top_n: int = 10, n: int = 1) -> None:
     sns.heatmap(ngrams)
 
 
-def language_distribution(df):
+def language_distribution(df:pd.DataFrame)->None:
     # distribution of our repos by language
     fig = plt.figure(figsize=(20, 10))
     ax = plt.subplot(111)
@@ -181,7 +184,7 @@ def language_distribution(df):
     plt.show()
 
 
-def language_name_chi2(df, lang):
+def language_name_chi2(df:pd.DataFrame, lang:str)->None:
     series = df.language == lang
     has_word = df.lemmatized.str.contains(lang.lower())
     ctab = pd.crosstab(series, has_word)
@@ -190,7 +193,7 @@ def language_name_chi2(df, lang):
     return p_to_md(p)
 
 
-def language_name_percentage_plot(df):
+def language_name_percentage_plot(df:pd.DataFrame)->None:
     # split into a df per language category
     go, java, javascript, not_listed, other, python, typescript = split_by_language(
         df)
@@ -295,10 +298,12 @@ def percentage_of_language_per_word(df):
     return title_word_counts_limited
 
 
-def significant_words_graph(train: pd.DataFrame) -> None:
-    significant_words = ['awesome', 'go', 'react']
+def get_significant_words_in_title(train: pd.DataFrame) -> pd.DataFrame:
+    significant_words = ['go','react','awesome']
     ret_df = pd.DataFrame()
     for word in significant_words:
-        ret_df[word] = train.groupby('language').lemmatized.agg(
-            lambda l: l.str.contains(word).sum())
-    sns.barplot(data=ret_df,x=)
+        repo_counts = train[
+            train.repo.str.contains(word)].language.value_counts(
+                normalize=True)
+        ret_df[word] = repo_counts
+    return ret_df.T
