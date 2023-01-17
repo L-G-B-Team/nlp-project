@@ -306,4 +306,5 @@ def get_significant_words_in_title(train: pd.DataFrame) -> pd.DataFrame:
             train.repo.str.contains(word)].language.value_counts(
                 normalize=True)
         ret_df[word] = repo_counts
+    ret_df.columns = ret_df.columns.str.lower()
     return ret_df.T
