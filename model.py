@@ -10,6 +10,7 @@ from sklearn.tree import DecisionTreeClassifier, plot_tree
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score
+from IPython.display import Markdown as md
 from sklearn.metrics import ConfusionMatrixDisplay
 
 ModelType = Union[LogisticRegression, DecisionTreeClassifier,
@@ -324,8 +325,8 @@ def plot_data(data: Dict[str, pd.DataFrame]) -> None:
 def run_test(test_x:pd.DataFrame,test_y:pd.Series,model:ModelType)->ConfusionMatrixDisplay:
     # TODO Docstring
     yhat_test = model_data(model,test_x)
-    plt.tight_layout()
-    return ConfusionMatrixDisplay.from_predictions(test_y,yhat_test,xticks_rotation='vertical')
+    plt.tight_layout()    acc_score = accuracy_score(test_y,yhat_test)
+    return md(f'## Accuracy Score: {acc_score}')
 
 
 def tf_idf(documents:pd.Series,tfidf:TfidfVectorizer)->pd.DataFrame:
@@ -336,3 +337,4 @@ def tf_idf(documents:pd.Series,tfidf:TfidfVectorizer)->pd.DataFrame:
     except NotFittedError:
         tfidf_docs = tfidf.fit_transform(documents.values)
     return pd.DataFrame(tfidf_docs.todense(),index=documents.index,columns=tfidf.get_feature_names_out())
+
