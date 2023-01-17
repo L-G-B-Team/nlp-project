@@ -7,14 +7,14 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.tree import DecisionTreeClassifier, plot_tree
-from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import ConfusionMatrixDisplay
 
 ModelType = Union[LogisticRegression, DecisionTreeClassifier,
                   RandomForestClassifier,
-                  HistGradientBoostingClassifier]
+                  GradientBoostingClassifier]
 DT_MAX_DEPTH = 22
 RF_MAX_DEPTH = 23
 RF_MIN_SAMPLES_LEAF = 2
@@ -26,7 +26,7 @@ def model_data(model: ModelType, features: pd.DataFrame, target: Union[pd.Series
     Fits (if applicable) and runs predictions on given model.
     ## Parameters
     model: a `DecisionTreeClassifier`, `RandomForestClassifier`,
-    or `HistGradientBoostingClassifier` to be modeled on (note)
+    or `GradientBoostingClassifier` to be modeled on (note)
     ## Returns
     
     '''
@@ -173,7 +173,7 @@ def tune_gradient_boost(
         min_samples_leaf: Tuple[int, int, int] = (2, 31, 1),
         metric: callable = accuracy_score) -> Tuple[pd.DataFrame, pd.DataFrame]:
     '''
-    Runs multiple versions of HistGradientBoostingClassifier
+    Runs multiple versions of GradientBoostingClassifier
     with different hyperparameters to determine the most effective
     parameters for modeling.
     ## Parameters
@@ -198,7 +198,7 @@ def tune_gradient_boost(
         for leaf in range(min_samples_leaf[0],
                           min_samples_leaf[1],
                           min_samples_leaf[2]):
-            model = HistGradientBoostingClassifier(
+            model = GradientBoostingClassifier(
                 n_estimators=100, max_depth=depth, min_samples_leaf=leaf)
             train_yhat = model_data(model, train_features, train_target,
                                     result_suffix=str(leaf))
@@ -259,15 +259,15 @@ def model_and_evaluate(features: pd.DataFrame, target: pd.Series, model: ModelTy
     yhat = model_data(model, features, target)
     return accuracy_score(target, yhat)
 
-def create_models()->Tuple[HistGradientBoostingClassifier,RandomForestClassifier,DecisionTreeClassifier]:
-    xg_boost = HistGradientBoostingClassifier(min_samples_leaf=XG_MIN_SAMPLES_LEAF,max_depth=XG_MAX_DEPTH,random_state=27)
+def create_models()->Tuple[GradientBoostingClassifier,RandomForestClassifier,DecisionTreeClassifier]:
+    xg_boost = GradientBoostingClassifier(min_samples_leaf=XG_MIN_SAMPLES_LEAF,max_depth=XG_MAX_DEPTH,random_state=27)
     random_forest = RandomForestClassifier(n_estimators=180,min_samples_leaf=RF_MIN_SAMPLES_LEAF,max_depth=RF_MAX_DEPTH,random_state=27)
     decision_tree = DecisionTreeClassifier(max_depth=DT_MAX_DEPTH,random_state=27)
     return xg_boost, random_forest, decision_tree
 
 
 def compare_models(train_x: pd.DataFrame, train_y: pd.Series, valid_x: pd.DataFrame, valid_y: pd.Series, decision_tree: DecisionTreeClassifier,
-                   random_forest: RandomForestClassifier, xg_boost: HistGradientBoostingClassifier) -> pd.DataFrame:
+                   random_forest: RandomForestClassifier, xg_boost: GradientBoostingClassifier) -> pd.DataFrame:
     # TODO Docstring
     ret_dict = {}
     sub_dct = {}
