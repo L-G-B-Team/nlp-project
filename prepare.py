@@ -252,3 +252,8 @@ def split_data(df: pd.DataFrame, target: str, test_size: float = 0.15):
         test_size + 0.05)/(1-test_size), random_state=27)
 
     return train, validate, test
+
+def prepare_readme(readme:str)->str:
+    #TODO Docstring
+    readme = squeaky_clean(readme)
+    return lemmatize(readme)

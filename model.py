@@ -12,7 +12,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score
 from IPython.display import Markdown as md
 from sklearn.metrics import ConfusionMatrixDisplay
-
+from prepare import prepare_readme
 ModelType = Union[LogisticRegression, DecisionTreeClassifier,
                   RandomForestClassifier,
                   GradientBoostingClassifier]
@@ -144,7 +144,6 @@ def scale(features: pd.Series, scaler: MinMaxScaler) -> pd.Series:
         scaler = scaler.fit(features)
         ret_series = scaler.transform(features)
     return pd.DataFrame(ret_series, index=indexes, columns=['scaled_lemmatized_length'])
-
 
 def encode_has_language(df):
     '''
@@ -330,7 +329,6 @@ def run_test(test_x:pd.DataFrame,test_y:pd.Series,model:ModelType)->ConfusionMat
     acc_score = accuracy_score(test_y,yhat_test) * 100
     return md(f'## Accuracy Score: {acc_score:1.2f}%')
 
-
 def tf_idf(documents:pd.Series,tfidf:TfidfVectorizer)->pd.DataFrame:
     # TODO Docstring
     tfidf_docs = np.empty((0,5))
@@ -339,4 +337,12 @@ def tf_idf(documents:pd.Series,tfidf:TfidfVectorizer)->pd.DataFrame:
     except NotFittedError:
         tfidf_docs = tfidf.fit_transform(documents.values)
     return pd.DataFrame(tfidf_docs.todense(),index=documents.index,columns=tfidf.get_feature_names_out())
-
+    
+def predict_readme(readme:str,scaler:MinMaxScaler,tfidf:TfidfVectorizer,model:ModelType)->str:
+    prepped_readme = prepare_readme(readme)
+    readme_ser = pd.DataFrame({'repo':'','lemmatized':prepped_readme},index=[0])
+    readme_ser['lemmatized_len'] = scaler.transform(np.array([readme_ser.lemmatized.str.len()]).reshape(1,-1))
+    encoded = encode_has_language(readme_ser)
+    tfidf = tf_idf(readme_ser.lemmatized,tfidf)
+    readme_ser = pd.concat([readme_ser.lemmatized_len,encoded,tfidf],axis=1)
+    return model.predict(readme_ser)[0]
