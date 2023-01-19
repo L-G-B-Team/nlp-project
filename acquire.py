@@ -61,6 +61,7 @@ def github_api_request(url: str) -> Union[List, Dict]:
     response = requests.get(url, headers=headers)
     response_data = response.json()
     if response.status_code != 200:
+        printf(f'Error on {url}')
         raise Exception(
             "Error response from github api!"
             f"status code: {response.status_code}, "

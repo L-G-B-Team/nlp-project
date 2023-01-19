@@ -12,7 +12,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.metrics import accuracy_score
 from IPython.display import Markdown as md
 from sklearn.metrics import ConfusionMatrixDisplay
-
+from prepare import prepare_readme
 ModelType = Union[LogisticRegression, DecisionTreeClassifier,
                   RandomForestClassifier,
                   GradientBoostingClassifier]
@@ -129,6 +129,13 @@ def tune_random_forest(
 
 
 def scale(features: pd.Series, scaler: MinMaxScaler) -> pd.Series:
+    '''
+    Fits (if applicable), and scales data with
+    ## Parameters
+    
+    ## Returns
+    
+    '''
     indexes = features.index
     features = features.values.reshape(-1, 1)
     try:
@@ -137,7 +144,6 @@ def scale(features: pd.Series, scaler: MinMaxScaler) -> pd.Series:
         scaler = scaler.fit(features)
         ret_series = scaler.transform(features)
     return pd.DataFrame(ret_series, index=indexes, columns=['scaled_lemmatized_length'])
-
 
 def encode_has_language(df):
     '''
@@ -216,21 +222,28 @@ def tune_gradient_boost(
 
 
 def get_features_and_target(train: pd.DataFrame, validate: pd.DataFrame, test: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
+    #TODO DOCSTRING
     # encode_has_language
-    train_x = encode_has_language(train)
-    valid_x = encode_has_language(validate)
-    test_x = encode_has_language(test)
+    training_x = encode_has_language(train)
+    validate_x = encode_has_language(validate)
+    testing_x = encode_has_language(test)
     # scale lemmatized_len
     scaler = MinMaxScaler()
     scaled_valid = scale(validate.lemmatized_len, scaler)
     scaled_train = scale(train.lemmatized_len, scaler)
     scaled_test = scale(test.lemmatized_len, scaler)
-    # concat scaled_train and encoded_has_language
-    train_x = pd.concat([scaled_train, train_x], axis=1)
+    #get TFIDF
+    tfidf = TfidfVectorizer(ngram_range=(1,2))
+    train_tfidf = tf_idf(train.lemmatized,tfidf)
+    valid_tfidf = tf_idf(validate.lemmatized,tfidf)
+    test_tfidf = tf_idf(test.lemmatized,tfidf)
+    # concat scaled_train,tfidf, and encoded_has_language
+    train_x = pd.concat([train_tfidf,scaled_train],axis=1)
+    train_x = pd.concat([train_x,training_x],axis=1)
     train_y = train.language
-    valid_x = pd.concat([scaled_valid, valid_x], axis=1)
+    valid_x = pd.concat([valid_tfidf,scaled_valid, validate_x], axis=1)
     valid_y = validate.language
-    test_x = pd.concat([scaled_test, test_x], axis=1)
+    test_x = pd.concat([test_tfidf,scaled_test, testing_x], axis=1)
     test_y = test.language
     return train_x, train_y, valid_x, valid_y,test_x,test_y
 
@@ -238,8 +251,8 @@ def get_features_and_target(train: pd.DataFrame, validate: pd.DataFrame, test: p
 def tune_hypers(train: pd.DataFrame, validate: pd.DataFrame) -> plt.Axes:
     # TODO doctring
     # get X and y values:
-    train_x, train_y, valid_x, valid_y = get_features_and_target(
-        train, validate)
+    train_x, train_y, valid_x, valid_y,_,_ = get_features_and_target(
+        train, validate,train)
     return_dct = {}
     return_dct['rf_train'], return_dct['rf_valid'] = tune_random_forest(
         train_x, train_y, valid_x, valid_y, max_depth=(2, 31, 1))
@@ -255,10 +268,12 @@ def model_and_evaluate(features: pd.DataFrame, target: pd.Series, model: ModelTy
     return accuracy_score(target, yhat)
 
 def create_models()->Tuple[GradientBoostingClassifier,RandomForestClassifier,DecisionTreeClassifier]:
-    xg_boost = GradientBoostingClassifier(n_estimators=180,min_samples_leaf=XG_MIN_SAMPLES_LEAF,max_depth=XG_MAX_DEPTH,random_state=27)
+    xg_boost = GradientBoostingClassifier(min_samples_leaf=XG_MIN_SAMPLES_LEAF,max_depth=XG_MAX_DEPTH,random_state=27)
     random_forest = RandomForestClassifier(n_estimators=180,min_samples_leaf=RF_MIN_SAMPLES_LEAF,max_depth=RF_MAX_DEPTH,random_state=27)
     decision_tree = DecisionTreeClassifier(max_depth=DT_MAX_DEPTH,random_state=27)
     return xg_boost, random_forest, decision_tree
+
+
 def compare_models(train_x: pd.DataFrame, train_y: pd.Series, valid_x: pd.DataFrame, valid_y: pd.Series, decision_tree: DecisionTreeClassifier,
                    random_forest: RandomForestClassifier, xg_boost: GradientBoostingClassifier) -> pd.DataFrame:
     # TODO Docstring
@@ -311,5 +326,23 @@ def plot_data(data: Dict[str, pd.DataFrame]) -> None:
 def run_test(test_x:pd.DataFrame,test_y:pd.Series,model:ModelType)->ConfusionMatrixDisplay:
     # TODO Docstring
     yhat_test = model_data(model,test_x)
-    acc_score = accuracy_score(test_y,yhat_test)
-    return md(f'## Accuracy Score: {acc_score}')
+    acc_score = accuracy_score(test_y,yhat_test) * 100
+    return md(f'## Accuracy Score: {acc_score:1.2f}%')
+
+def tf_idf(documents:pd.Series,tfidf:TfidfVectorizer)->pd.DataFrame:
+    # TODO Docstring
+    tfidf_docs = np.empty((0,5))
+    try:
+        tfidf_docs = tfidf.transform(documents.values)
+    except NotFittedError:
+        tfidf_docs = tfidf.fit_transform(documents.values)
+    return pd.DataFrame(tfidf_docs.todense(),index=documents.index,columns=tfidf.get_feature_names_out())
+    
+def predict_readme(readme:str,scaler:MinMaxScaler,tfidf:TfidfVectorizer,model:ModelType)->str:
+    prepped_readme = prepare_readme(readme)
+    readme_ser = pd.DataFrame({'repo':'','lemmatized':prepped_readme},index=[0])
+    readme_ser['lemmatized_len'] = scaler.transform(np.array([readme_ser.lemmatized.str.len()]).reshape(1,-1))
+    encoded = encode_has_language(readme_ser)
+    tfidf = tf_idf(readme_ser.lemmatized,tfidf)
+    readme_ser = pd.concat([readme_ser.lemmatized_len,encoded,tfidf],axis=1)
+    return model.predict(readme_ser)[0]

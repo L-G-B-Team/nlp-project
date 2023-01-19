@@ -9,7 +9,6 @@ import seaborn as sns
 from IPython.display import Markdown as md
 from scipy import stats
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from wordcloud import WordCloud
 
 import prepare as p
 
@@ -106,20 +105,6 @@ def get_ngram_frequency(ser: Union[pd.Series, str], n: int = 1) -> pd.Series:
     return pd.Series(words).value_counts()
 
 
-def generate_word_cloud(ser: pd.Series, ngram: int = 1,
-                        ax: Union[plt.Axes, None] = None,
-                        **kwargs) -> Union[plt.Axes, None]:
-    # TODO Docstring
-    if ser.dtype != np.int64:
-        ser = get_ngram_frequency(ser, ngram)
-    wc = WordCloud(**kwargs).generate_from_frequencies(ser.to_dict())
-    if ax is not None:
-        ax.imshow(wc)
-        return ax
-    plt.imshow(wc)
-    plt.show()
-
-
 def get_word_frequency(readme: str) -> pd.Series:
     # TODO Docstring
     val_counts = pd.Series(readme.split()).value_counts()[:5]
@@ -140,7 +125,10 @@ def top_five_words(series: pd.Series) -> pd.DataFrame:
     return readme_counts
 
 
-def split_by_language(df):
+def split_by_language(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame,
+                                                 pd.DataFrame, pd.DataFrame,
+                                                 pd.DataFrame, pd.DataFrame,
+                                                 pd.DataFrame]:
     '''
     Takes in the dataframe and splits on the languages
     Returns seven dataframes, one per language
@@ -187,7 +175,7 @@ def word_heat_map(df: pd.DataFrame, top_n: int = 10, n: int = 1) -> None:
     sns.heatmap(ngrams)
 
 
-def language_distribution(df):
+def language_distribution(df:pd.DataFrame)->None:
     # distribution of our repos by language
     fig = plt.figure(figsize=(20, 10))
     ax = plt.subplot(111)
@@ -196,7 +184,7 @@ def language_distribution(df):
     plt.show()
 
 
-def language_name_chi2(df, lang):
+def language_name_chi2(df:pd.DataFrame, lang:str)->None:
     series = df.language == lang
     has_word = df.lemmatized.str.contains(lang.lower())
     ctab = pd.crosstab(series, has_word)
@@ -205,7 +193,7 @@ def language_name_chi2(df, lang):
     return p_to_md(p)
 
 
-def language_name_percentage_plot(df):
+def language_name_percentage_plot(df:pd.DataFrame)->None:
     # split into a df per language category
     go, java, javascript, not_listed, other, python, typescript = split_by_language(
         df)
@@ -289,7 +277,8 @@ def get_idf(df):
 
 
 def percentage_of_language_per_word(df):
-    go, java, javascript, not_listed, other, python, typescript = split_by_language(df)
+    go, java, javascript, not_listed, other, python, typescript = split_by_language(
+        df)
     javascript_title_freq = get_ngram_frequency(javascript.repo)
     python_title_freq = get_ngram_frequency(python.repo)
     typescript_title_freq = get_ngram_frequency(typescript.repo)
@@ -299,10 +288,23 @@ def percentage_of_language_per_word(df):
     java_title_freq = get_ngram_frequency(java.repo)
     all_title_freq = get_ngram_frequency(df.repo)
 
-    title_word_counts = (pd.concat([all_title_freq, javascript_title_freq,typescript_title_freq,go_title_freq, python_title_freq, java_title_freq, other_series_freq, not_listed_freq], axis=1, sort=True)
-                    .set_axis(['all', 'javascript','typescript','go', 'python', 'java','other','not_listed'], axis=1, inplace=False)
-                    .fillna(0)
-                    .apply(lambda s: s.astype(int)))
-    title_word_counts_limited = title_word_counts[(title_word_counts.index=='awesome') | (title_word_counts.index=='react') | (title_word_counts.index=='go')]
+    title_word_counts = (pd.concat([all_title_freq, javascript_title_freq, typescript_title_freq, go_title_freq, python_title_freq, java_title_freq, other_series_freq, not_listed_freq], axis=1, sort=True)
+                         .set_axis(['all', 'javascript', 'typescript', 'go', 'python', 'java', 'other', 'not_listed'], axis=1, inplace=False)
+                         .fillna(0)
+                         .apply(lambda s: s.astype(int)))
+    title_word_counts_limited = title_word_counts[(title_word_counts.index == 'awesome') | (
+        title_word_counts.index == 'react') | (title_word_counts.index == 'go')]
 
     return title_word_counts_limited
+
+
+def get_significant_words_in_title(train: pd.DataFrame) -> pd.DataFrame:
+    significant_words = ['go','react','awesome']
+    ret_df = pd.DataFrame()
+    for word in significant_words:
+        repo_counts = train[
+            train.repo.str.contains(word)].language.value_counts()
+        ret_df[word] = repo_counts
+    ret_df = ret_df.T
+    ret_df['all'] = ret_df.sum(axis=1)
+    return ret_df
