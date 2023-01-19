@@ -57,10 +57,9 @@ My initial hypothesis is that repos that contain the name of a programming langu
 * The words 'awesome','react', and 'go' appearing in the repo title seem to be indicators of a README's primary language
 
 ## Recommendations
-* :
-    * 
-    * 
-    * 
+* We suggest to use this model to predict primary programming language for now.
+* Collect more READMEs for exploration and discovery of indicators of primary programming language
+
 
 ## Next Steps
 * In the next iteration:
